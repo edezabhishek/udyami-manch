@@ -35,6 +35,7 @@ export default function BusinessesSection({ addOpen, onAddClose, onChanged }: {
 }) {
   const toast = useToast()
   const isAdmin = useAuthStore(s => s.user?.role === 'admin')
+  const signedIn = useAuthStore(s => !!s.user)
   const [scope, setScope] = useState<BusinessListScope>('all')
   const [query, setQuery] = useState('')
   const [businesses, setBusinesses] = useState<Business[] | null>(null)
@@ -116,7 +117,7 @@ export default function BusinessesSection({ addOpen, onAddClose, onChanged }: {
             )}
           </label>
           <div className="seg">
-            {SCOPES.filter(s => !s.adminOnly || isAdmin).map(s => (
+            {SCOPES.filter(s => (!s.adminOnly || isAdmin) && (signedIn || s.id === 'all')).map(s => (
               <button key={s.id} type="button" className={scope === s.id ? 'on' : ''} onClick={() => setScope(s.id)}>{s.label}</button>
             ))}
           </div>

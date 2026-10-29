@@ -8,6 +8,7 @@ import { UdyamiSpotlights } from '../../db/entities/UdyamiSpotlights.entity';
 import { UdyamiBusinessesController } from './udyami-businesses.controller';
 import { UdyamiBusinessesService } from './udyami-businesses.service';
 import { UdyamiEventsController } from './udyami-events.controller';
+import { UdyamiMapController } from './udyami-map.controller';
 import { UdyamiEventsService } from './udyami-events.service';
 import { UdyamiController } from './udyami.controller';
 import { UdyamiService } from './udyami.service';
@@ -17,7 +18,7 @@ import { Module } from '@nestjs/common';
 /** Udyami Manch: "Udyami of the Month" and nominations. Registered in AppModule. */
 @Module({
   imports: [MikroOrmModule.forFeature([UdyamiSpotlights, UdyamiNominations, UdyamiBusinesses, UdyamiSavedBusinesses, UdyamiEvents, UdyamiEventRsvps, Users])],
-  controllers: [UdyamiController, UdyamiBusinessesController, UdyamiEventsController],
+  controllers: [UdyamiController, UdyamiBusinessesController, UdyamiEventsController, UdyamiMapController],
   providers: [UdyamiService, UdyamiBusinessesService, UdyamiEventsService],
 })
 export class UdyamiModule {}

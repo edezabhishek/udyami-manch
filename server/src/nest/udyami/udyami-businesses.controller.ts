@@ -1,10 +1,11 @@
 import type { User } from '../../types';
 import { CurrentUser } from '../auth-core/current-user.decorator';
-import { JwtAuthGuard } from '../auth-core/jwt-auth.guard';
+import { OptionalAuth } from '../auth-core/public.decorator';
+import { viewer } from './viewer';
 import { ResponseContract } from '../common/response-contract';
 import { BusinessStatusDto, BusinessUpsertDto } from './udyami.dto';
 import { BusinessAccessError, UdyamiBusinessesService } from './udyami-businesses.service';
-import { Body, Controller, Delete, Get, HttpCode, HttpException, Param, ParseIntPipe, Patch, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpException, Param, ParseIntPipe, Patch, Post, Put, Query } from '@nestjs/common';
 import {
   businessCommunitySchema,
   businessListResponseSchema,
@@ -30,20 +31,21 @@ async function guarded<T>(work: () => Promise<T>): Promise<T> {
 
 /** /api/udyami — the business directory. */
 @Controller('api/udyami')
-@UseGuards(JwtAuthGuard)
 export class UdyamiBusinessesController {
   constructor(private readonly directory: UdyamiBusinessesService) {}
 
   @Get('directory-stats')
+  @OptionalAuth('the public directory: anyone can see the counts')
   @ResponseContract(directoryStatsSchema)
-  async stats(@CurrentUser() user: User): Promise<DirectoryStats> {
-    return this.directory.stats(user);
+  async stats(@CurrentUser() user?: User): Promise<DirectoryStats> {
+    return this.directory.stats(viewer(user));
   }
 
   @Get('businesses')
+  @OptionalAuth('the public directory: anyone can browse approved listings')
   @ResponseContract(businessListResponseSchema)
   async list(
-    @CurrentUser() user: User,
+    @CurrentUser() user: User | undefined,
     @Query('scope') scope?: string,
     @Query('q') q?: string,
     @Query('country') country?: string,
@@ -56,15 +58,16 @@ export class UdyamiBusinessesController {
     const parsedCommunity = community ? businessCommunitySchema.safeParse(community) : null;
     if (parsedCommunity && !parsedCommunity.success) throw new HttpException({ error: 'Invalid community' }, 400);
     const businesses = await guarded(() =>
-      this.directory.list(user, { scope: parsedScope.data, q, country, city, category, community: parsedCommunity?.data }),
+      this.directory.list(viewer(user), { scope: parsedScope.data, q, country, city, category, community: parsedCommunity?.data }),
     );
     return { businesses };
   }
 
   @Get('businesses/:id')
+  @OptionalAuth('the public directory: anyone can open an approved listing')
   @ResponseContract(businessResponseSchema)
-  async get(@CurrentUser() user: User, @Param('id', ParseIntPipe) id: number): Promise<{ business: Business }> {
-    return { business: await guarded(() => this.directory.get(user, id)) };
+  async get(@CurrentUser() user: User | undefined, @Param('id', ParseIntPipe) id: number): Promise<{ business: Business }> {
+    return { business: await guarded(() => this.directory.get(viewer(user), id)) };
   }
 
   @Post('businesses')

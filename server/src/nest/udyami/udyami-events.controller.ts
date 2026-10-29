@@ -1,10 +1,11 @@
 import type { User } from '../../types';
 import { CurrentUser } from '../auth-core/current-user.decorator';
-import { JwtAuthGuard } from '../auth-core/jwt-auth.guard';
+import { OptionalAuth } from '../auth-core/public.decorator';
+import { viewer } from './viewer';
 import { ResponseContract } from '../common/response-contract';
 import { EventStatusDto, EventUpsertDto } from './udyami.dto';
 import { EventAccessError, UdyamiEventsService } from './udyami-events.service';
-import { Body, Controller, Delete, Get, HttpCode, HttpException, Param, ParseIntPipe, Patch, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpException, Param, ParseIntPipe, Patch, Post, Put, Query } from '@nestjs/common';
 import { eventListResponseSchema, eventListScopeSchema, eventResponseSchema, type EventListResponse, type UdyamiEvent } from '@trek/shared';
 
 async function guarded<T>(work: () => Promise<T>): Promise<T> {
@@ -21,22 +22,23 @@ async function guarded<T>(work: () => Promise<T>): Promise<T> {
 
 /** /api/udyami/events — online events. */
 @Controller('api/udyami/events')
-@UseGuards(JwtAuthGuard)
 export class UdyamiEventsController {
   constructor(private readonly events: UdyamiEventsService) {}
 
   @Get()
+  @OptionalAuth('the public events list: anyone can see approved online events')
   @ResponseContract(eventListResponseSchema)
-  async list(@CurrentUser() user: User, @Query('scope') scope?: string): Promise<EventListResponse> {
+  async list(@CurrentUser() user: User | undefined, @Query('scope') scope?: string): Promise<EventListResponse> {
     const parsed = eventListScopeSchema.safeParse(scope ?? 'upcoming');
     if (!parsed.success) throw new HttpException({ error: 'Invalid scope' }, 400);
-    return { events: await guarded(() => this.events.list(user, parsed.data)) };
+    return { events: await guarded(() => this.events.list(viewer(user), parsed.data)) };
   }
 
   @Get(':id')
+  @OptionalAuth('the public events list: anyone can open an approved event')
   @ResponseContract(eventResponseSchema)
-  async get(@CurrentUser() user: User, @Param('id', ParseIntPipe) id: number): Promise<{ event: UdyamiEvent }> {
-    return { event: await guarded(() => this.events.get(user, id)) };
+  async get(@CurrentUser() user: User | undefined, @Param('id', ParseIntPipe) id: number): Promise<{ event: UdyamiEvent }> {
+    return { event: await guarded(() => this.events.get(viewer(user), id)) };
   }
 
   @Post()

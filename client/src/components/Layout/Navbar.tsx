@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useNavigate, useLocation } from 'react-router'
 import { useAuthStore } from '../../store/authStore'
+import GuestNavbar from './GuestNavbar'
 import { useSettingsStore } from '../../store/settingsStore'
 import { useAddonStore } from '../../store/addonStore'
 import { usePluginStore } from '../../store/pluginStore'
@@ -34,7 +35,7 @@ interface Addon {
   enabled: boolean
 }
 
-export default function Navbar({ tripTitle, tripId, onBack, showBack, onSettings }: NavbarProps): React.ReactElement {
+function MemberNavbar({ tripTitle, tripId, onBack, showBack, onSettings }: NavbarProps): React.ReactElement {
   const { user, logout, isPrerelease, appVersion } = useAuthStore()
   const { settings, updateSetting } = useSettingsStore()
   const { addons: allAddons, loadAddons } = useAddonStore()
@@ -369,4 +370,10 @@ export default function Navbar({ tripTitle, tripId, onBack, showBack, onSettings
       </div>
     </nav>
   )
+}
+
+/** Udyami Manch: signed-in people get the full bar, visitors get the public one. */
+export default function Navbar(props: NavbarProps): React.ReactElement {
+  const signedIn = useAuthStore((s) => !!s.user)
+  return signedIn ? <MemberNavbar {...props} /> : <GuestNavbar />
 }

@@ -33,6 +33,7 @@ const BTN_PRIMARY = 'inline-flex items-center gap-1.5 rounded-[10px] bg-accent p
 export default function EventsPage() {
   const toast = useToast()
   const isAdmin = useAuthStore(s => s.user?.role === 'admin')
+  const signedIn = useAuthStore(s => !!s.user)
   const [scope, setScope] = useState<EventListScope>('upcoming')
   const [events, setEvents] = useState<UdyamiEvent[] | null>(null)
   const [creating, setCreating] = useState(false)
@@ -84,7 +85,7 @@ export default function EventsPage() {
         </div>
 
         <div className="mb-5 flex flex-wrap gap-2">
-          {SCOPES.filter(s => !s.adminOnly || isAdmin).map(s => (
+          {SCOPES.filter(s => (!s.adminOnly || isAdmin) && (signedIn || s.id !== 'mine')).map(s => (
             <button key={s.id} type="button" onClick={() => setScope(s.id)}
               className={`rounded-full px-4 py-1.5 text-caption font-semibold ${scope === s.id ? 'bg-accent text-accent-text' : 'border border-edge bg-surface-card text-content-secondary hover:bg-surface-hover'}`}>
               {s.label}

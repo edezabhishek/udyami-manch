@@ -54,6 +54,7 @@ const SettingsPage = lazyWithRetry(() => import('./pages/SettingsPage'))
 const VacayPage = lazyWithRetry(() => import('./pages/VacayPage'))
 // Udyami Manch: the Events tab lists online events instead of TREK's holiday planner.
 const EventsPage = lazyWithRetry(() => import('./pages/EventsPage'))
+const PublicHomePage = lazyWithRetry(() => import('./pages/PublicHomePage'))
 const HelpPage = lazyWithRetry(() => import('./pages/HelpPage'))
 const AtlasPage = lazyWithRetry(() => import('./pages/AtlasPage'))
 // Udyami Manch: the World Map tab shows the directory instead of TREK's visited-countries atlas.
@@ -167,6 +168,29 @@ function ProtectedRoute({ children, adminRequired = false, addonId }: ProtectedR
         {children}
       </ErrorBoundary>
     </MobileShell>
+  )
+}
+
+/**
+ * Udyami Manch: the directory, events and world map are open to visitors. A signed-in
+ * person gets the normal app shell; a visitor gets the page with the public top bar.
+ */
+function OpenRoute({ children, visitor }: { children: React.ReactNode; visitor?: React.ReactNode }) {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const isLoading = useAuthStore((s) => s.isLoading)
+  const location = useLocation()
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="w-10 h-10 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin"></div>
+      </div>
+    )
+  }
+  if (isAuthenticated) return <ProtectedRoute>{children}</ProtectedRoute>
+  return (
+    <ErrorBoundary key={location.pathname} boundaryId="public-route" level="route">
+      {visitor ?? children}
+    </ErrorBoundary>
   )
 }
 
@@ -288,7 +312,7 @@ function RootRedirect() {
     )
   }
 
-  return <Navigate to={isAuthenticated ? (target ?? '/dashboard') : '/login'} replace />
+  return <Navigate to={isAuthenticated ? (target ?? '/dashboard') : '/dashboard'} replace />
 }
 
 /**
@@ -441,9 +465,9 @@ export default function App() {
           <Route
             path="/dashboard"
             element={
-              <ProtectedRoute>
+              <OpenRoute visitor={<PublicHomePage />}>
                 <ViewportRoute phone={MDashboardScreen} desktop={DashboardPage} />
-              </ProtectedRoute>
+              </OpenRoute>
             }
           />
           {/* Trip invite link (#1143) — behind ProtectedRoute so an anonymous
@@ -508,17 +532,17 @@ export default function App() {
           <Route
             path="/vacay"
             element={
-              <ProtectedRoute>
+              <OpenRoute>
                 <ViewportRoute phone={EventsPage} desktop={EventsPage} />
-              </ProtectedRoute>
+              </OpenRoute>
             }
           />
           <Route
             path="/atlas"
             element={
-              <ProtectedRoute>
+              <OpenRoute>
                 <ViewportRoute phone={WorldMapPage} desktop={WorldMapPage} />
-              </ProtectedRoute>
+              </OpenRoute>
             }
           />
           <Route

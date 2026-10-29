@@ -82,7 +82,7 @@ export default function WorldMapPage() {
   const reload = () => businessesApi.list({ scope: 'all' }).then(r => setBusinesses(r.businesses)).catch(() => toast.error('Could not load businesses'))
 
   useEffect(() => {
-    apiClient.get('/addons/atlas/countries/geo', { timeout: 30000 }).then(r => setGeo(r.data)).catch(() => setGeo(null))
+    apiClient.get('/udyami/map-geo', { timeout: 30000 }).then(r => setGeo(r.data)).catch(() => setGeo(null))
     reload()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
