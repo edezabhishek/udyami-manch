@@ -4,8 +4,8 @@ import { Link, NavLink, useLocation } from 'react-router'
 
 const LINKS = [
   { to: '/dashboard', label: 'Home', icon: Store },
-  { to: '/vacay', label: 'Events', icon: CalendarDays },
   { to: '/atlas', label: 'World Map', icon: Globe },
+  { to: '/vacay', label: 'Events', icon: CalendarDays },
 ]
 
 /**
@@ -27,7 +27,7 @@ export default function GuestNavbar() {
       className="fixed inset-x-0 top-0 z-40 flex h-[60px] items-center gap-3 border-b px-3 sm:px-6"
       style={{ background: 'var(--bg-card)', borderColor: 'var(--border-faint)' }}
     >
-      <Link to="/dashboard" className="flex flex-none items-center gap-2 no-underline" aria-label="Udyami Manch home">
+      <Link to="/atlas" className="flex flex-none items-center gap-2 no-underline" aria-label="Udyami Manch home">
         <img src="/icons/icon-dark.svg" alt="" className="h-8 w-8 rounded-lg dark:hidden" />
         <img src="/icons/icon-white.svg" alt="" className="hidden h-8 w-8 rounded-lg dark:block" />
         <span className="hidden text-[15px] font-bold sm:inline" style={{ color: 'var(--text-primary)' }}>Udyami Manch</span>

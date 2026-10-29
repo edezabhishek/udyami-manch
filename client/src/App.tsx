@@ -294,13 +294,13 @@ function RootRedirect() {
     const { page, tab } = settingsLoaded
       ? { page: settings.start_page ?? DEFAULT_START_PAGE, tab: settings.start_trip_tab ?? DEFAULT_START_TRIP_TAB }
       : (mirrored ?? { page: DEFAULT_START_PAGE, tab: DEFAULT_START_TRIP_TAB })
-    if (page !== 'active_trip') { setTarget('/dashboard'); return }
+    if (page !== 'active_trip') { setTarget('/atlas'); return }
     let cancelled = false
     // Through the repo, not the api: offline this answers from Dexie instead of
     // bouncing a cached trip to the dashboard.
     tripRepo.active()
-      .then(({ trip }) => { if (!cancelled) setTarget(trip ? tripStartPath(trip.id, tab) : '/dashboard') })
-      .catch(() => { if (!cancelled) setTarget('/dashboard') })
+      .then(({ trip }) => { if (!cancelled) setTarget(trip ? tripStartPath(trip.id, tab) : '/atlas') })
+      .catch(() => { if (!cancelled) setTarget('/atlas') })
     return () => { cancelled = true }
   }, [isLoading, isAuthenticated, settingsLoaded, settingsGaveUp, settings, target])
 
@@ -312,7 +312,7 @@ function RootRedirect() {
     )
   }
 
-  return <Navigate to={isAuthenticated ? (target ?? '/dashboard') : '/dashboard'} replace />
+  return <Navigate to={isAuthenticated ? (target ?? '/atlas') : '/atlas'} replace />
 }
 
 /**
