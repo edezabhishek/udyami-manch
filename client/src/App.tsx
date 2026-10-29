@@ -458,35 +458,19 @@ export default function App() {
           />
           <Route
             path="/help"
-            element={
-              <ProtectedRoute>
-                <HelpPage />
-              </ProtectedRoute>
-            }
+            element={<Navigate to="/dashboard" replace />}
           />
           <Route
             path="/help/:slug"
-            element={
-              <ProtectedRoute>
-                <HelpPage />
-              </ProtectedRoute>
-            }
+            element={<Navigate to="/dashboard" replace />}
           />
           <Route
             path="/trips/:id"
-            element={
-              <ProtectedRoute>
-                <ViewportRoute phone={MTripScreen} desktop={TripPlannerPage} />
-              </ProtectedRoute>
-            }
+            element={<Navigate to="/dashboard" replace />}
           />
           <Route
             path="/trips/:id/files"
-            element={
-              <ProtectedRoute>
-                <FilesPage />
-              </ProtectedRoute>
-            }
+            element={<Navigate to="/dashboard" replace />}
           />
           <Route
             path="/admin"

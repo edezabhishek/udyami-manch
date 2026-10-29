@@ -98,7 +98,6 @@ COPY --chown=node:node --from=server-builder /app/server/assets ./server/assets
 # The in-app help pages (/help) read this straight from disk at runtime, so the
 # docs always match the version running. Without it, wikiService falls back to
 # fetching the GitHub wiki, which tracks main and needs network access.
-COPY --chown=node:node wiki ./wiki
 # tsconfig-paths/register reads this at runtime to resolve MCP SDK paths.
 COPY --chown=node:node server/tsconfig.json ./server/
 # Encryption-key rotation is run on demand via tsx (a prod dep) straight from the
@@ -139,9 +138,9 @@ RUN if [ "$APP_VERSION" != "dev" ]; then printf '%s\n' "$APP_VERSION" > /app/ser
 # the commit and the build time; a local build carries everything else.
 LABEL org.opencontainers.image.title="TREK" \
       org.opencontainers.image.description="Self-hosted collaborative travel planner" \
-      org.opencontainers.image.url="https://github.com/liketrek/TREK" \
-      org.opencontainers.image.source="https://github.com/liketrek/TREK" \
-      org.opencontainers.image.documentation="https://github.com/liketrek/TREK/wiki" \
+      org.opencontainers.image.url="https://github.com/edezabhishek/udyami-manch" \
+      org.opencontainers.image.source="https://github.com/edezabhishek/udyami-manch" \
+      org.opencontainers.image.documentation="https://github.com/edezabhishek/udyami-manch" \
       org.opencontainers.image.licenses="AGPL-3.0-only" \
       org.opencontainers.image.version="${APP_VERSION}"
 

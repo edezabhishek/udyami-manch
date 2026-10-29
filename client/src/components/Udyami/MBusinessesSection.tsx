@@ -100,7 +100,7 @@ export default function MBusinessesSection() {
       {businesses !== null && businesses.length === 0 && (
         <div className="mt-[10px] flex flex-col items-center gap-2 rounded-[20px] border border-[color:var(--m-gbr)] bg-[color:var(--m-glass)] px-4 py-8 text-center">
           <Store size={24} className="text-m-faint" />
-          <div className="text-[0.8125rem] text-m-muted">{query ? `No businesses match "${query.trim()}".` : 'Nothing here yet.'}</div>
+          <div className="text-[0.8125rem] text-m-muted">{query ? `No businesses match "${query.trim()}".` : ({ all: 'No businesses listed yet. Tap + to add the first one.', mine: "You haven't added a business yet.", saved: 'Save businesses to find them here quickly.', pending: 'Nothing waiting for review.' } as Record<string, string>)[scope]}</div>
         </div>
       )}
       <div className="mt-[10px] flex flex-col gap-3">

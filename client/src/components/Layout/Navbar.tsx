@@ -265,7 +265,6 @@ export default function Navbar({ tripTitle, tripId, onBack, showBack, onSettings
       {user && <AssistantLauncher variant="navbar" />}
 
       {/* Contextual help for the current screen — same footprint as the theme toggle beside it */}
-      {user && <HelpButton />}
 
       {/* Dark mode toggle (light ↔ dark, overrides auto) — hidden on mobile */}
       <button type="button" onClick={toggleDarkMode} title={dark ? t('nav.lightMode') : t('nav.darkMode')}
@@ -324,14 +323,6 @@ export default function Navbar({ tripTitle, tripId, onBack, showBack, onSettings
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                     <Settings className="w-4 h-4" />
                     {t('nav.settings')}
-                  </Link>
-
-                  <Link to="/help" onClick={() => setUserMenuOpen(false)}
-                    className="flex items-center gap-2 px-4 py-2 text-sm transition-colors text-content-secondary"
-                    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                    <BookOpen className="w-4 h-4" />
-                    {t('nav.help')}
                   </Link>
 
                   {user.role === 'admin' && (
