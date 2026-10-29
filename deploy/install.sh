@@ -29,5 +29,7 @@ echo "==> Building and starting (the first build takes 10 to 20 minutes)"
 docker compose up -d --build
 
 echo
-echo "Done. Open https://$DOMAIN and create the first account. The first account becomes the admin."
+echo "Done. Open https://$DOMAIN"
+echo "Your admin login was printed once at first start. Show it with:"
+echo "  docker logs udyami-app 2>&1 | grep -A6 'First Run'"
 echo "Back up $DIR/deploy/.env, data and uploads."

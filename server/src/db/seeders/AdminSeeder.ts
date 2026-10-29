@@ -91,7 +91,7 @@ export class AdminSeeder extends Seeder {
 
       console.log('');
       console.log('╔══════════════════════════════════════════════╗');
-      console.log('║  Udyami Manch — First Run: Admin Account Created     ║');
+      console.log('║  Udyami Manch: First Run, Admin Account Created      ║');
       console.log('╠══════════════════════════════════════════════╣');
       console.log(`║  Email:    ${email.padEnd(33)}║`);
       console.log(`║  Password: ${password.padEnd(33)}║`);

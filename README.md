@@ -97,7 +97,7 @@ Or with Docker:
 docker compose up -d
 ```
 
-Open http://localhost:3000 and create the first account. The first account becomes the admin.
+Open http://localhost:3000. On first start the server creates an admin account and prints its email and password in the terminal (look for "First Run: Admin Account Created"). Sign in with those and set a new password.
 
 ## Built on TREK
 
