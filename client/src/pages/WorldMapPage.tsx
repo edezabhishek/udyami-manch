@@ -1,11 +1,15 @@
 import L from 'leaflet'
-import { ArrowLeft, Globe2, MapPin, Search, Store, X } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { ArrowLeft, Globe, MapPin, Store } from 'lucide-react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import type { Business } from '@trek/shared'
 import apiClient from '../api/client'
 import { businessesApi, COMMUNITY_LABEL } from '../api/udyami'
 import Navbar from '../components/Layout/Navbar'
+import { useGlassGlare } from '../components/Atlas/useGlassGlare'
+import CountryFlag from '../components/shared/CountryFlag'
+import { useTranslation } from '../i18n'
+import AtlasCountrySearch from './atlas/AtlasCountrySearch'
 import BusinessDetailDialog from '../components/Udyami/BusinessDetailDialog'
 import BusinessFormDialog from '../components/Udyami/BusinessFormDialog'
 import { useToast } from '../components/shared/Toast'
@@ -64,20 +68,19 @@ export default function WorldMapPage() {
   const [businesses, setBusinesses] = useState<Business[]>([])
   const [selected, setSelected] = useState<string | null>(null)
   const [filter, setFilter] = useState('')
+  const [results, setResults] = useState<{ code: string; label: string }[]>([])
+  const [searchOpen, setSearchOpen] = useState(false)
+  const { t } = useTranslation()
+  const glare = useGlassGlare(dark)
   const [tab, setTab] = useState<'stats' | 'countries'>('stats')
   const [open, setOpen] = useState<Business | null>(null)
   const [editing, setEditing] = useState<Business | null>(null)
   const resolve = useCountryResolver(geo)
-  const filterRef = useRef<HTMLInputElement>(null)
   const [params, setParams] = useSearchParams()
 
-  // The phone dock's centre button on this page means "find a country".
+  // The phone dock's centre button used to open the country search; the search is always on screen now.
   useEffect(() => {
-    if (params.get('search') === '1') {
-      setSelected(null)
-      setTimeout(() => filterRef.current?.focus(), 50)
-      setParams(prev => { const next = new URLSearchParams(prev); next.delete('search'); return next }, { replace: true })
-    }
+    if (params.get('search') === '1') setParams(prev => { const next = new URLSearchParams(prev); next.delete('search'); return next }, { replace: true })
   }, [params, setParams])
 
   const reload = () => businessesApi.list({ scope: 'all' }).then(r => setBusinesses(r.businesses)).catch(() => toast.error('Could not load businesses'))
@@ -115,7 +118,7 @@ export default function WorldMapPage() {
       center: [20, 40], zoom: 2, minZoom: 2, maxZoom: 8, zoomControl: false, attributionControl: false,
       maxBounds: [[-75, -220], [85, 220]], maxBoundsViscosity: 1, preferCanvas: true, worldCopyJump: false,
     })
-    L.control.zoom({ position: 'topright' }).addTo(map)
+    L.control.zoom({ position: 'bottomright' }).addTo(map)
     mapInstance.current = map
     return () => { map.remove(); mapInstance.current = null }
   }, [])
@@ -162,17 +165,19 @@ export default function WorldMapPage() {
       if (!a2 || !codes.includes(a2)) continue
       const g = f.geometry as { type: string; coordinates: number[][][] | number[][][][] }
       const polys = (g.type === 'Polygon' ? [g.coordinates] : g.coordinates) as number[][][][]
-      let best: number[][] | null = null
-      let bestArea = -1
-      for (const poly of polys) {
+      // Every sizeable island, none of the tiny outliers: New Zealand's Chatham Islands sit
+      // east of 180 degrees and would stretch the box across the date line.
+      const rings = polys.map(poly => {
         const ring = poly[0]
         const lngs = ring.map(c => c[0]); const lats = ring.map(c => c[1])
-        const area = (Math.max(...lngs) - Math.min(...lngs)) * (Math.max(...lats) - Math.min(...lats))
-        if (area > bestArea) { bestArea = area; best = ring }
+        return { ring, area: (Math.max(...lngs) - Math.min(...lngs)) * (Math.max(...lats) - Math.min(...lats)) }
+      })
+      const biggest = Math.max(...rings.map(r => r.area))
+      for (const { ring, area } of rings) {
+        if (area < biggest * 0.15) continue
+        const box = L.latLngBounds(ring.map(c => [c[1], c[0]] as [number, number]))
+        bounds = bounds ? bounds.extend(box) : box
       }
-      if (!best) continue
-      const box = L.latLngBounds(best.map(c => [c[1], c[0]] as [number, number]))
-      bounds = bounds ? bounds.extend(box) : box
     }
     return bounds
   }
@@ -183,7 +188,7 @@ export default function WorldMapPage() {
     if (!map || !geo) return
     const codes = selected ? [selected] : Object.keys(counts)
     const b = boundsOf(codes)
-    if (b) map.flyToBounds(b, { paddingTopLeft: [20, 80], paddingBottomRight: [20, Math.round(Math.min(280, window.innerHeight * 0.36))], maxZoom: selected ? 6 : 3, duration: 0.6 })
+    if (b) map.flyToBounds(b, { paddingTopLeft: [20, 80], paddingBottomRight: [20, Math.round(Math.min(280, window.innerHeight * 0.36))], maxZoom: selected ? 5 : 3, duration: 0.6 })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected, geo, Object.keys(counts).join(',')])
 
@@ -217,16 +222,8 @@ export default function WorldMapPage() {
     }
     return out
   }, [geo])
-  const suggestions = useMemo(() => {
-    const q = norm(filter)
-    if (!q) return []
-    const alias = COUNTRY_ALIASES[q]
-    return allCountries
-      .filter(c => c.code === alias || norm(c.name).includes(q))
-      .sort((a, b) => (counts[b.code] ?? 0) - (counts[a.code] ?? 0) || a.name.localeCompare(b.name))
-      .slice(0, 6)
-  }, [filter, allCountries, counts])
-  const pick = (code: string) => { setSelected(code); setFilter('') }
+  const options = useMemo(() => allCountries.map(c => ({ code: c.code, label: c.name })).sort((a, b) => a.label.localeCompare(b.label)), [allCountries])
+  const pick = (code: string) => { setSelected(code); setFilter(''); setResults([]); setSearchOpen(false) }
 
   const replace = (b: Business) => { setBusinesses(list => list.map(x => (x.id === b.id ? b : x))); setOpen(o => (o?.id === b.id ? b : o)) }
   const toggleSave = async (b: Business) => {
@@ -240,85 +237,115 @@ export default function WorldMapPage() {
     try { await businessesApi.setStatus(b.id, status); setOpen(null); reload() } catch { toast.error('Could not update the listing') }
   }
 
+  const bg = (o: number) => (dark ? `rgba(255,255,255,${o})` : `rgba(0,0,0,${o})`)
+  const tp = dark ? '#f1f5f9' : '#0f172a'
+  const tm = dark ? '#94a3b8' : '#64748b'
+  const tf = dark ? '#475569' : '#94a3b8'
+  const noTransparency = typeof document !== 'undefined' && document.documentElement.hasAttribute('data-no-transparency')
+  // The same glass the original Atlas panel is cut from.
+  const glassPanel: React.CSSProperties = {
+    background: noTransparency ? (dark ? '#15151c' : '#ffffff') : (dark ? 'rgba(10,10,15,0.55)' : 'rgba(255,255,255,0.2)'),
+    backdropFilter: 'blur(24px) saturate(180%)',
+    WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+    border: '1px solid ' + (dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'),
+    borderRadius: 20,
+    boxShadow: dark ? '0 8px 32px rgba(0,0,0,0.3)' : '0 8px 32px rgba(0,0,0,0.08)',
+  }
+
   const stat = (n: number, label: string) => (
-    <div className="flex min-w-[64px] flex-col items-center">
-      <span className="text-[22px] font-bold leading-none text-content">{n}</span>
-      <span className="mt-1 text-[10px] font-semibold uppercase tracking-[.08em] text-content-muted">{label}</span>
+    <div className="flex shrink-0 flex-col items-center justify-center px-3 py-5">
+      <span className="text-2xl font-black tabular-nums leading-none" style={{ color: tp }}>{n}</span>
+      <span className="mt-1.5 whitespace-nowrap text-[9px] font-semibold uppercase tracking-wide" style={{ color: tf }}>{label}</span>
+    </div>
+  )
+
+  const tabBar = (
+    <div style={{ display: 'flex', gap: 4, padding: '12px 16px 0', marginBottom: 4 }}>
+      {([['stats', 'Stats', Globe], ['countries', 'Countries', MapPin]] as const).map(([id, label, Icon]) => (
+        <button
+          type="button" key={id} onClick={() => setTab(id)}
+          style={{
+            flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+            padding: '7px 0', borderRadius: 10, border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+            fontSize: 'calc(12px * var(--fs-scale-body, 1))', fontWeight: 600, transition: 'all 0.15s',
+            background: tab === id ? bg(0.1) : 'transparent', color: tab === id ? tp : tf,
+          }}
+        >
+          <Icon size={13} /> {label}
+        </button>
+      ))}
     </div>
   )
 
   return (
     <div className="h-screen overflow-hidden bg-surface">
       <Navbar />
-      <div className="fixed inset-x-0 bottom-0" style={{ top: 'var(--nav-h)' }}>
-        <div ref={mapRef} className="absolute inset-0" style={{ background: dark ? '#121215' : '#F7FAFB', zIndex: 1 }} />
+      <div style={{ position: 'fixed', top: 'var(--nav-h)', insetInline: 0, bottom: 'env(safe-area-inset-bottom, 0px)' }}>
+        <div ref={mapRef} style={{ position: 'absolute', inset: 0, zIndex: 1, background: dark ? '#1a1a2e' : '#f0f0f0' }} />
 
-        {/* Search, centred over the map */}
-        <div className="pointer-events-none absolute inset-x-0 top-4 z-[500] flex justify-center px-4">
-          <div className="pointer-events-auto relative w-full max-w-[480px]">
-            <label className="flex items-center gap-2 rounded-full border border-edge bg-surface-card/95 px-4 py-3 shadow-card backdrop-blur">
-              <Search size={16} className="text-content-muted" />
-              <input
-                ref={filterRef}
-                value={filter}
-                onChange={e => setFilter(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && suggestions[0]) pick(suggestions[0].code) }}
-                placeholder="Search a country..."
-                aria-label="Search a country"
-                className="min-w-0 flex-1 bg-transparent text-body text-content outline-none"
-              />
-              {filter && <button type="button" onClick={() => setFilter('')} aria-label="Clear"><X size={14} className="text-content-muted" /></button>}
-            </label>
-            {suggestions.length > 0 && (
-              <ul className="absolute inset-x-0 top-full m-0 mt-2 list-none overflow-hidden rounded-[18px] border border-edge bg-surface-card p-1 shadow-card">
-                {suggestions.map(c => (
-                  <li key={c.code}>
-                    <button type="button" onClick={() => pick(c.code)} className="flex w-full items-center gap-3 rounded-[12px] px-3 py-2 text-start hover:bg-surface-hover">
-                      <span className="min-w-0 flex-1 truncate text-body text-content">{c.name}</span>
-                      <span className="text-caption text-content-muted">{counts[c.code] ?? 0} listed</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
+        {/* Search, centred over the map: the original Atlas search box */}
+        <AtlasCountrySearch
+          dark={dark}
+          t={t}
+          search={filter}
+          setSearch={setFilter}
+          results={results}
+          setResults={setResults}
+          open={searchOpen}
+          setOpen={setSearchOpen}
+          options={options}
+          onSelect={pick}
+          placeResults={[]}
+          placesLoading={false}
+          onQueryChange={() => {}}
+          onSelectPlace={() => {}}
+        />
 
-        {/* Panel, centred along the bottom */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[500] flex justify-center px-3 sm:px-6" style={{ paddingBottom: 'calc(var(--bottom-nav-h, 0px) + 16px)' }}>
-          <section className="pointer-events-auto w-full max-w-[1040px] rounded-[24px] border border-edge bg-surface-card/95 p-3 shadow-card backdrop-blur">
+        {/* Panel, bottom centre, in the original Atlas glass */}
+        <div className="pointer-events-none absolute inset-x-0 z-10 flex justify-center px-3 sm:px-5" style={{ bottom: 'calc(var(--bottom-nav-h, 0px) + 16px)' }}>
+          <div
+            ref={glare.panelRef}
+            onMouseMove={glare.onMouseMove}
+            onMouseLeave={glare.onMouseLeave}
+            className="pointer-events-auto relative flex max-w-full flex-col overflow-hidden"
+            style={{ ...glassPanel, width: 'fit-content', minWidth: 'min(100%, 420px)' }}
+          >
+            <div ref={glare.glareRef} className="pointer-events-none absolute inset-0" style={{ opacity: 0, transition: 'opacity 0.3s ease', borderRadius: 20 }} />
+            <div ref={glare.borderGlareRef} className="pointer-events-none absolute inset-0" style={{ opacity: 0, transition: 'opacity 0.3s ease', borderRadius: 20, border: dark ? '1.5px solid rgba(255,255,255,0.5)' : '2px solid rgba(0,0,0,0.15)' }} />
+
             {selected ? (
               <>
-                <div className="flex items-center gap-3 px-1 pb-2">
-                  <button type="button" onClick={() => setSelected(null)} className="grid h-9 w-9 flex-none place-items-center rounded-full bg-surface-hover" aria-label="Back to the world">
+                <div className="flex items-center gap-3 px-4 pt-3">
+                  <button type="button" onClick={() => setSelected(null)} className="grid h-9 w-9 flex-none place-items-center rounded-full" style={{ background: bg(0.08), color: tp }} aria-label="Back to the world">
                     <ArrowLeft size={16} />
                   </button>
+                  <CountryFlag code={selected} size={30} />
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-subtitle font-semibold text-content">{selectedName}</div>
-                    <div className="text-caption text-content-muted">{selectedGroup?.businesses.length ?? 0} listed</div>
+                    <p className="truncate text-sm font-bold" style={{ color: tp }}>{selectedName}</p>
+                    <p className="text-[11px]" style={{ color: tm }}>{selectedGroup?.businesses.length ?? 0} listed</p>
                   </div>
                 </div>
-                <div className="max-h-[38vh] overflow-y-auto px-1">
+                <div className="max-h-[36vh] overflow-y-auto px-4 pb-4 pt-3">
                   {byCity.length === 0 && (
-                    <div className="flex flex-col items-center gap-2 py-8 text-center">
-                      <Store size={26} className="text-content-faint" />
-                      <p className="m-0 text-body text-content-secondary">No businesses listed here yet.</p>
+                    <div className="flex flex-col items-center gap-2 py-6 text-center">
+                      <Store size={24} style={{ color: tf }} />
+                      <p className="m-0 text-sm" style={{ color: tm }}>No businesses listed here yet.</p>
                     </div>
                   )}
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {byCity.map(([city, list]) => (
                       <div key={city}>
-                        <div className="mb-2 flex items-center gap-1 text-caption font-semibold uppercase tracking-[.06em] text-content-muted">
-                          <MapPin size={12} /> {city} · {list.length}
+                        <div className="mb-2 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide" style={{ color: tf }}>
+                          <MapPin size={11} /> {city} · {list.length}
                         </div>
                         <ul className="m-0 flex list-none flex-col gap-2 p-0">
                           {list.map(b => (
                             <li key={b.id}>
-                              <button type="button" onClick={() => setOpen(b)} className="flex w-full items-center gap-3 rounded-[12px] border border-edge bg-surface-card px-3 py-2 text-start hover:bg-surface-hover">
-                                <span className="grid h-9 w-9 flex-none place-items-center rounded-[10px] bg-accent-subtle text-accent-on"><Store size={16} /></span>
+                              <button type="button" onClick={() => setOpen(b)} className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-start transition-opacity hover:opacity-80" style={{ background: bg(0.07) }}>
+                                <span className="grid h-9 w-9 flex-none place-items-center rounded-[10px]" style={{ background: bg(0.1), color: tp }}><Store size={16} /></span>
                                 <span className="min-w-0 flex-1">
-                                  <span className="block truncate text-body font-semibold text-content">{b.name}</span>
-                                  <span className="block truncate text-caption text-content-muted">{b.category} · {COMMUNITY_LABEL[b.community]}</span>
+                                  <span className="block truncate text-sm font-semibold" style={{ color: tp }}>{b.name}</span>
+                                  <span className="block truncate text-[11px]" style={{ color: tm }}>{b.category} · {COMMUNITY_LABEL[b.community]}</span>
                                 </span>
                               </button>
                             </li>
@@ -331,38 +358,30 @@ export default function WorldMapPage() {
               </>
             ) : (
               <>
-                <div className="mb-3 grid grid-cols-2 gap-1 rounded-full bg-surface-hover p-1">
-                  {([['stats', 'Stats', Globe2], ['countries', 'Countries', MapPin]] as const).map(([id, label, Icon]) => (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => setTab(id)}
-                      className={`flex items-center justify-center gap-2 rounded-full px-3 py-2 text-[13px] font-semibold ${tab === id ? 'bg-surface-card text-content shadow-card' : 'text-content-muted'}`}
-                    >
-                      <Icon size={14} /> {label}
-                    </button>
-                  ))}
-                </div>
-                {tab === 'stats' ? (
-                  <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 px-2 pb-2 sm:justify-between">
-                    <div className="flex items-baseline gap-2 rounded-[16px] bg-accent-subtle px-5 py-3">
-                      <span className="text-[40px] font-bold leading-none text-accent-on">{totalCountries}</span>
-                      <span className="text-body text-content-secondary">{totalCountries === 1 ? 'Country' : 'Countries'}</span>
-                    </div>
-                    <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
-                      {stat(businesses.length, 'Businesses')}
-                      {stat(totalCities, 'Cities')}
-                    </div>
-                    <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
+                {tabBar}
+                {/* Both tabs always rendered so the wider one sets the panel width */}
+                <div style={{ display: 'grid' }}>
+                  <div style={tab !== 'stats' ? { visibility: 'hidden', gridArea: '1/1' } : { gridArea: '1/1' }}>
+                    <div className="flex flex-wrap items-stretch justify-center">
+                      <div className="mx-2 my-2 flex flex-col justify-center rounded-xl px-5 py-4" style={{ background: bg(0.08) }}>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-5xl font-black tabular-nums leading-none" style={{ color: tp }}>{totalCountries}</span>
+                          <span className="text-sm font-medium" style={{ color: tm }}>{totalCountries === 1 ? 'Country' : 'Countries'}</span>
+                        </div>
+                      </div>
+                      {stat(businesses.length, businesses.length === 1 ? 'Business' : 'Businesses')}
+                      {stat(totalCities, totalCities === 1 ? 'City' : 'Cities')}
+                      <div className="hidden sm:block" style={{ width: 2, background: bg(0.08), margin: '12px 14px' }} />
                       {stat(byCommunity.nepali, 'Nepali')}
                       {stat(byCommunity.indian, 'Indian')}
                       {stat(byCommunity.both, 'Both')}
                     </div>
                   </div>
-                ) : (
-                  <div className="max-h-[34vh] overflow-y-auto px-1 pb-1">
-                    {groups.length === 0 && <p className="m-0 px-3 py-6 text-center text-body text-content-secondary">No countries with listings yet.</p>}
-                    <div className="flex flex-wrap justify-center gap-2">
+                  <div style={tab !== 'countries' ? { visibility: 'hidden', gridArea: '1/1' } : { gridArea: '1/1' }}>
+                    <div className="flex items-stretch overflow-x-auto px-2" style={{ maxWidth: 'min(920px, calc(100vw - 40px))' }}>
+                      {groups.length === 0 && (
+                        <div className="flex items-center justify-center px-6 py-5 text-sm" style={{ color: tf }}>No countries with listings yet.</div>
+                      )}
                       {groups.map(([key, g]) => (
                         <button
                           key={key}
@@ -370,18 +389,19 @@ export default function WorldMapPage() {
                           onClick={() => g.code && setSelected(g.code)}
                           disabled={!g.code}
                           title={g.code ? undefined : 'This country name is not on the map yet'}
-                          className="flex items-center gap-2 rounded-full border border-edge bg-surface-card px-3 py-1.5 text-body text-content hover:bg-surface-hover disabled:opacity-60"
+                          className="flex min-w-[84px] shrink-0 flex-col items-center justify-center px-3.5 py-3 transition-opacity hover:opacity-75 disabled:opacity-60"
                         >
-                          {g.name}
-                          <span className="rounded-full bg-accent-subtle px-2 py-[1px] text-caption font-semibold text-accent-on">{g.businesses.length}</span>
+                          {g.code ? <span className="mb-1"><CountryFlag code={g.code} size={26} /></span> : <MapPin size={16} style={{ color: tf }} className="mb-1" />}
+                          <span className="max-w-[96px] truncate text-xs font-semibold" style={{ color: tp }}>{g.name}</span>
+                          <span className="mt-0.5 text-[10px]" style={{ color: tf }}>{g.businesses.length} listed</span>
                         </button>
                       ))}
                     </div>
                   </div>
-                )}
+                </div>
               </>
             )}
-          </section>
+          </div>
         </div>
       </div>
 
