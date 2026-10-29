@@ -1,6 +1,6 @@
 # Third-party data & attributions
 
-TREK bundles and uses third-party data that requires attribution.
+Udyami Manch bundles and uses third-party data that requires attribution.
 
 ## geoBoundaries — country & sub-national boundaries
 
