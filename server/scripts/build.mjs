@@ -1,3 +1,6 @@
+// The server type-check needs more than the 2 GB default Node heap; without this it runs out of memory.
+process.env.NODE_OPTIONS ||= '--max-old-space-size=4096';
+
 import { execSync } from 'node:child_process';
 import { existsSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
