@@ -24,6 +24,9 @@ export default function PublicHomePage() {
               <UdyamiSpotlightHero locale={locale} />
               <div className="max-[720px]:hidden"><DirectoryStats refreshKey={0} /></div>
               <BusinessesSection addOpen={false} onAddClose={() => {}} onChanged={() => {}} />
+              <p className="mt-10 text-center text-[12px]" style={{ color: 'var(--text-muted)' }}>
+                <Link to="/terms">Terms</Link> · <Link to="/privacy">Privacy</Link> · Built on TREK, AGPL-3.0
+              </p>
             </div>
           </main>
         </div>

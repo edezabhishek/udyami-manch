@@ -22,6 +22,8 @@ cd "$DIR/deploy"
 if [ ! -f .env ]; then
   echo "DOMAIN=$DOMAIN" > .env
   echo "ENCRYPTION_KEY=$(openssl rand -hex 32)" >> .env
+  echo "ADMIN_EMAIL=${ADMIN_EMAIL:-nepal@udyamimanch.com}" >> .env
+  echo "ADMIN_PASSWORD=Um-$(openssl rand -hex 8)-Aa1" >> .env
   chmod 600 .env
 fi
 
@@ -30,6 +32,7 @@ docker compose up -d --build
 
 echo
 echo "Done. Open https://$DOMAIN"
-echo "Your admin login was printed once at first start. Show it with:"
-echo "  docker logs udyami-app 2>&1 | grep -A6 'First Run'"
+echo "Admin sign in (you will be asked to choose a new password straight away):"
+echo "  Email:    $(grep '^ADMIN_EMAIL=' .env | cut -d= -f2-)"
+echo "  Password: $(grep '^ADMIN_PASSWORD=' .env | cut -d= -f2-)"
 echo "Back up $DIR/deploy/.env, data and uploads."

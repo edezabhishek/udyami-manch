@@ -145,7 +145,7 @@ apiClient.interceptors.request.use(
 )
 
 export function isAuthPublicPath(pathname: string): boolean {
-  const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password']
+  const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password', '/terms', '/privacy']
   const publicPrefixes = ['/shared/', '/public/']
   return publicPaths.includes(pathname) || publicPrefixes.some((p) => pathname.startsWith(p))
 }
@@ -283,10 +283,11 @@ export function postMultipart<T = any>(url: string, formData: FormData, opts?: U
 }
 
 export const authApi = {
-  register: (data: RegisterRequest) => apiClient.post('/auth/register', data).then(r => r.data),
+  register: (data: RegisterRequest) => apiClient.post('/auth/register', data, { timeout: 60000 }).then(r => r.data),
   validateInvite: (token: string) => apiClient.get(`/auth/invite/${token}`).then(r => r.data),
-  login: (data: LoginRequest) => apiClient.post('/auth/login', data).then(r => r.data),
-  verifyMfaLogin: (data: MfaVerifyLoginRequest) => apiClient.post('/auth/mfa/verify-login', data).then(r => r.data),
+  // Hashing a password takes real time on a small or busy machine, well past the shared 8 s.
+  login: (data: LoginRequest) => apiClient.post('/auth/login', data, { timeout: 60000 }).then(r => r.data),
+  verifyMfaLogin: (data: MfaVerifyLoginRequest) => apiClient.post('/auth/mfa/verify-login', data, { timeout: 60000 }).then(r => r.data),
   mfaSetup: () => apiClient.post('/auth/mfa/setup', {}).then(r => r.data),
   mfaEnable: (data: MfaEnableRequest) => apiClient.post('/auth/mfa/enable', data).then(r => r.data as { success: boolean; mfa_enabled: boolean; backup_codes?: string[] }),
   mfaDisable: (data: { password: string; code: string }) => apiClient.post('/auth/mfa/disable', data).then(r => r.data),
@@ -302,7 +303,7 @@ export const authApi = {
   updateAppSettings: (data: Record<string, unknown>) => apiClient.put('/auth/app-settings', data).then(r => r.data),
   validateKeys: () => apiClient.get('/auth/validate-keys').then(r => r.data),
   travelStats: () => apiClient.get('/auth/travel-stats').then(r => r.data),
-  changePassword: (data: ChangePasswordRequest) => apiClient.put('/auth/me/password', data).then(r => r.data),
+  changePassword: (data: ChangePasswordRequest) => apiClient.put('/auth/me/password', data, { timeout: 60000 }).then(r => r.data),
   forgotPassword: (data: ForgotPasswordRequest) => apiClient.post('/auth/forgot-password', data).then(r => r.data as { ok: true }),
   resetPassword: (data: ResetPasswordRequest) => apiClient.post('/auth/reset-password', data).then(r => r.data as { success?: true; mfa_required?: true }),
   deleteOwnAccount: () => apiClient.delete('/auth/me').then(r => r.data),
