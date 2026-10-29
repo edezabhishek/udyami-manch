@@ -1,0 +1,62 @@
+# Production stack: Udyami Manch behind Caddy (automatic HTTPS).
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: udyami-manch:latest
+    container_name: udyami-app
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETUID
+      - SETGID
+      - KILL
+    tmpfs:
+      - /tmp:noexec,nosuid,size=128m
+    expose:
+      - "3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - TZ=Pacific/Auckland
+      - LOG_LEVEL=info
+      - APP_URL=https://${DOMAIN}
+      - ALLOWED_ORIGINS=https://${DOMAIN}
+      - FORCE_HTTPS=true
+      - TRUST_PROXY=1
+      - TREK_PLACES_ENABLED=false
+    volumes:
+      - ./data:/app/data
+      - ./uploads:/app/uploads
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  caddy:
+    image: caddy:2
+    container_name: udyami-caddy
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - DOMAIN=${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:
