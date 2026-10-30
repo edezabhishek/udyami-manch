@@ -23,7 +23,7 @@ export default function DirectoryStats({ refreshKey }: { refreshKey: number }) {
     <section className="atlas" style={{ '--atlas-template': signedIn ? '1.5fr 1fr 1fr 1fr' : '1.5fr 1fr 1fr', '--atlas-template-m': '1fr 1fr' } as CSSProperties}>
       <div className="atlas-card passport">
         <div className="label">Atlas · countries listed</div>
-        <div className="value mono">{value(stats?.countries)}<span style={{ fontSize: 15, fontWeight: 500, opacity: 0.6, marginInlineStart: 8 }}>of 195</span></div>
+        <div className="value mono">{value(stats?.countries)}<span style={{ fontSize: 15, fontWeight: 500, opacity: 0.6, marginInlineStart: 8, whiteSpace: 'pre' }}>{' of 195'}</span></div>
         <div className="delta" style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'rgba(255,255,255,.65)' }}>
           {(stats?.country_names ?? []).map(n => countryCodeOf(n)).filter((c): c is string => !!c).slice(0, 4).map(c => <CountryFlag key={c} code={c} size={18} />)}
           {(stats?.country_names.length ?? 0) > 4 && <span style={{ fontSize: 12 }}>+{(stats?.country_names.length ?? 0) - 4}</span>}

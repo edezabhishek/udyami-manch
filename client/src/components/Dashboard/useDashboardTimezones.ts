@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSettingsStore } from '../../store/settingsStore';
 import { browserTimeZone, isValidTimeZone } from '../../utils/localDate';
 
-const DEFAULT_ZONES = ['Europe/London', 'Asia/Tokyo'];
+const DEFAULT_ZONES = ['Pacific/Auckland', 'Asia/Kolkata'];
 
 // Fallback for the rare browser without Intl.supportedValuesOf.
 const FALLBACK_ZONES = [

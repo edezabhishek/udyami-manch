@@ -3,6 +3,7 @@ import { Plus } from 'lucide-react'
 import { Link, useNavigate } from 'react-router'
 import GuestNavbar from '../components/Layout/GuestNavbar'
 import BusinessesSection from '../components/Udyami/BusinessesSection'
+import UpcomingEvents from '../components/Udyami/UpcomingEvents'
 import DirectoryStats from '../components/Udyami/DirectoryStats'
 import UdyamiSpotlightHero from '../components/Udyami/UdyamiSpotlightHero'
 import { useTranslation } from '../i18n'
@@ -25,6 +26,7 @@ export default function PublicHomePage() {
               <UdyamiSpotlightHero locale={locale} />
               <div className="max-[720px]:hidden"><DirectoryStats refreshKey={0} /></div>
               <BusinessesSection addOpen={false} onAdd={() => navigate(`/login?redirect=${encodeURIComponent('/dashboard?addBusiness=1')}`)} onAddClose={() => {}} onChanged={() => {}} />
+              <UpcomingEvents />
               <p className="mt-10 text-center text-[12px]" style={{ color: 'var(--text-muted)' }}>
                 <Link to="/terms">Terms</Link> · <Link to="/privacy">Privacy</Link> · Built on TREK, AGPL-3.0
               </p>

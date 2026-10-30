@@ -1,6 +1,7 @@
 import { useSearchParams } from 'react-router'
 import UdyamiSpotlightHero from '../components/Udyami/UdyamiSpotlightHero'
 import BusinessesSection from '../components/Udyami/BusinessesSection'
+import UpcomingEvents from '../components/Udyami/UpcomingEvents'
 import DirectoryStats from '../components/Udyami/DirectoryStats'
 import React from 'react'
 import { useTranslation } from '../i18n'
@@ -177,6 +178,8 @@ function DashboardPageDesktop(): React.ReactElement {
             <DirectoryStats refreshKey={dirKey} />
 
             <BusinessesSection addOpen={addBusiness} onAdd={() => setAddBusiness(true)} onAddClose={() => setAddBusiness(false)} onChanged={() => setDirKey(k => k + 1)} />
+
+            <UpcomingEvents />
           </div>
 
           {sidebarVisible && (

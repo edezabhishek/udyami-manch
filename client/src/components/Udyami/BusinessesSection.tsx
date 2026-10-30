@@ -1,10 +1,10 @@
-import { Plus, Search, Store, X } from 'lucide-react'
+import { Bookmark, BookmarkCheck, LayoutGrid, List, Plus, Search, Store, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import type { Business, BusinessListScope } from '@trek/shared'
-import { businessesApi } from '../../api/udyami'
+import { businessesApi, COMMUNITY_LABEL } from '../../api/udyami'
 import { useAuthStore } from '../../store/authStore'
 import { useToast } from '../shared/Toast'
-import BusinessCard from './BusinessCard'
+import BusinessCard, { BusinessStatusPill, businessGradient } from './BusinessCard'
 import BusinessDetailDialog from './BusinessDetailDialog'
 import BusinessFormDialog from './BusinessFormDialog'
 
@@ -37,6 +37,7 @@ export default function BusinessesSection({ addOpen, onAddClose, onChanged, onAd
 }) {
   const toast = useToast()
   const isAdmin = useAuthStore(s => s.user?.role === 'admin')
+  const [view, setView] = useState<'grid' | 'list'>('grid')
   const signedIn = useAuthStore(s => !!s.user)
   const [scope, setScope] = useState<BusinessListScope>('all')
   const [query, setQuery] = useState('')
@@ -123,6 +124,10 @@ export default function BusinessesSection({ addOpen, onAddClose, onChanged, onAd
               <button key={s.id} type="button" className={scope === s.id ? 'on' : ''} onClick={() => setScope(s.id)}>{s.label}</button>
             ))}
           </div>
+          <div className="seg" role="group" aria-label="Layout">
+            <button type="button" className={view === 'grid' ? 'on' : ''} onClick={() => setView('grid')} aria-label="Grid view" title="Grid view"><LayoutGrid size={15} /></button>
+            <button type="button" className={view === 'list' ? 'on' : ''} onClick={() => setView('list')} aria-label="List view" title="List view"><List size={15} /></button>
+          </div>
         </div>
       </div>
 
@@ -133,13 +138,40 @@ export default function BusinessesSection({ addOpen, onAddClose, onChanged, onAd
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      {view === 'list' && (
+        <div className="flex flex-col gap-2">
+          {businesses?.map(b => (
+            <div
+              key={b.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => setOpen(b)}
+              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(b) } }}
+              className="flex cursor-pointer items-center gap-3 rounded-[16px] border border-edge bg-surface-card p-2 pe-4 shadow-card transition-shadow hover:shadow-elevated"
+            >
+              <div className="h-14 w-20 flex-none overflow-hidden rounded-[12px]" style={b.photo_url ? undefined : { background: businessGradient(b.id) }}>
+                {b.photo_url && <img src={b.photo_url} alt="" className="h-full w-full object-cover" loading="lazy" />}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-[15px] font-semibold text-content">{b.name}</div>
+                <div className="truncate text-caption text-content-muted">{b.category} · {b.city}, {b.country}</div>
+              </div>
+              <span className="hidden flex-none rounded-full bg-accent-subtle px-2.5 py-[3px] text-[10.5px] font-bold uppercase tracking-[.06em] text-accent-on sm:inline">{COMMUNITY_LABEL[b.community]}</span>
+              <BusinessStatusPill status={b.status} />
+              <button type="button" onClick={e => { e.stopPropagation(); void toggleSave(b) }} aria-label={b.saved ? 'Remove from saved' : 'Save business'} className="grid h-8 w-8 flex-none place-items-center rounded-full text-content-muted hover:bg-surface-hover">
+                {b.saved ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className={view === 'list' ? 'hidden' : 'grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3'}>
         {businesses?.map(b => (
           <BusinessCard key={b.id} business={b} onOpen={() => setOpen(b)} onToggleSave={() => toggleSave(b)} />
         ))}
         {onAdd && businesses !== null && scope === 'all' && !query && (
           <button type="button" onClick={onAdd} className="flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-[20px] border border-dashed border-edge bg-transparent p-6 text-center hover:bg-surface-hover">
-            <span className="grid h-12 w-12 place-items-center rounded-full bg-bg-inverse text-white"><Plus size={22} /></span>{/* theme-lint-disable: icon on the inverse fill */}
+            <span className="grid h-12 w-12 place-items-center rounded-full" style={{ background: "var(--accent)", color: "#fff" }}><Plus size={22} /></span>
             <span className="text-[15px] font-semibold text-content">Add business</span>
             <span className="text-caption text-content-muted">List a business in the directory</span>
           </button>
