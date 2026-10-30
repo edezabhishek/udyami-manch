@@ -1,9 +1,10 @@
-import { CalendarDays, CalendarPlus, Check, Clock, Pencil, Plus, Trash2, Users, Video, X } from 'lucide-react'
+import { CalendarDays, CalendarPlus, Check, Clock, List, Pencil, Plus, Trash2, Users, Video, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import type { EventListScope, UdyamiEvent } from '@trek/shared'
 import { eventsApi } from '../api/udyami'
 import Navbar from '../components/Layout/Navbar'
+import CommunityCalendar from '../components/Udyami/CommunityCalendar'
 import EventFormDialog, { PLATFORM_LABEL } from '../components/Udyami/EventFormDialog'
 import { downloadIcs, formatWhen, isLiveSoon, localTimezone } from '../components/Udyami/eventTime'
 import { useToast } from '../components/shared/Toast'
@@ -35,6 +36,7 @@ export default function EventsPage() {
   const isAdmin = useAuthStore(s => s.user?.role === 'admin')
   const signedIn = useAuthStore(s => !!s.user)
   const [scope, setScope] = useState<EventListScope>('upcoming')
+  const [view, setView] = useState<'list' | 'calendar'>('list')
   const [events, setEvents] = useState<UdyamiEvent[] | null>(null)
   const [creating, setCreating] = useState(false)
   const [editing, setEditing] = useState<UdyamiEvent | null>(null)
@@ -73,7 +75,7 @@ export default function EventsPage() {
   return (
     <div className="min-h-screen bg-surface-secondary">
       <Navbar />
-      <main className="mx-auto w-full max-w-[960px] px-4 pb-[120px] pt-6 md:pb-12" style={{ paddingTop: 'calc(var(--nav-h) + 24px)' }}>
+      <main className={`mx-auto w-full px-4 pb-[120px] pt-6 md:pb-12 ${view === 'calendar' ? 'max-w-[1280px]' : 'max-w-[960px]'}`} style={{ paddingTop: 'calc(var(--nav-h) + 24px)' }}>
         <div className="mb-5 flex flex-wrap items-end gap-3">
           <div className="min-w-0 flex-1">
             <h1 className="m-0 text-title font-bold text-content">Online events</h1>
@@ -84,8 +86,12 @@ export default function EventsPage() {
           </button>
         </div>
 
-        <div className="mb-5 flex flex-wrap gap-2">
-          {SCOPES.filter(s => (!s.adminOnly || isAdmin) && (signedIn || s.id !== 'mine')).map(s => (
+        <div className="mb-5 flex flex-wrap items-center gap-2">
+          <div className="me-2 flex items-center gap-1 rounded-full border border-edge bg-surface-card p-1" role="group" aria-label="View">
+            <button type="button" onClick={() => setView('list')} className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-caption font-semibold ${view === 'list' ? 'bg-accent text-accent-text' : 'text-content-secondary'}`}><List size={13} /> List</button>
+            <button type="button" onClick={() => setView('calendar')} className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-caption font-semibold ${view === 'calendar' ? 'bg-accent text-accent-text' : 'text-content-secondary'}`}><CalendarDays size={13} /> Calendar</button>
+          </div>
+          {view === 'list' && SCOPES.filter(s => (!s.adminOnly || isAdmin) && (signedIn || s.id !== 'mine')).map(s => (
             <button key={s.id} type="button" onClick={() => setScope(s.id)}
               className={`rounded-full px-4 py-1.5 text-caption font-semibold ${scope === s.id ? 'bg-accent text-accent-text' : 'border border-edge bg-surface-card text-content-secondary hover:bg-surface-hover'}`}>
               {s.label}
@@ -93,14 +99,16 @@ export default function EventsPage() {
           ))}
         </div>
 
-        {events !== null && events.length === 0 && (
+        {view === 'calendar' && <CommunityCalendar />}
+
+        {view === 'list' && events !== null && events.length === 0 && (
           <div className="flex flex-col items-center gap-2 rounded-[20px] border border-dashed border-edge bg-surface-card px-6 py-14 text-center">
             <CalendarDays size={30} className="text-content-faint" />
             <p className="m-0 text-body text-content-secondary">{EMPTY[scope]}</p>
           </div>
         )}
 
-        <div className="flex flex-col gap-4">
+        <div className={view === 'list' ? 'flex flex-col gap-4' : 'hidden'}>
           {events?.map(ev => {
             const start = new Date(ev.starts_at)
             const past = Date.parse(ev.ends_at) < Date.now()
