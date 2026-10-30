@@ -58,7 +58,7 @@ const LegalPage = lazyWithRetry(() => import('./pages/LegalPage'))
 const PublicHomePage = lazyWithRetry(() => import('./pages/PublicHomePage'))
 const HelpPage = lazyWithRetry(() => import('./pages/HelpPage'))
 const AtlasPage = lazyWithRetry(() => import('./pages/AtlasPage'))
-// Udyami Manch: the World Map tab shows the directory instead of TREK's visited-countries atlas.
+// Udyami Manch: the Atlas tab shows the directory instead of TREK's visited-countries atlas.
 const WorldMapPage = lazyWithRetry(() => import('./pages/WorldMapPage'))
 const JourneyPage = lazyWithRetry(() => import('./pages/JourneyPage'))
 const JourneyDetailPage = lazyWithRetry(() => import('./pages/JourneyDetailPage'))

@@ -60,7 +60,7 @@ function useCountryResolver(geo: GeoJsonFeatureCollection | null) {
 interface CountryGroup { code: string | null; name: string; businesses: Business[] }
 
 /**
- * World Map: where Nepali and Indian owned businesses are listed. Countries are
+ * Atlas: where Nepali and Indian owned businesses are listed. Countries are
  * shaded by how many approved listings they hold; picking one lists its
  * businesses by city.
  */

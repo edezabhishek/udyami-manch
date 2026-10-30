@@ -4,7 +4,7 @@ import { Link, NavLink, useLocation } from 'react-router'
 
 const LINKS = [
   { to: '/dashboard', label: 'Home', icon: Store },
-  { to: '/atlas', label: 'World Map', icon: Globe },
+  { to: '/atlas', label: 'Atlas', icon: Globe },
   { to: '/vacay', label: 'Events', icon: CalendarDays },
 ]
 
