@@ -21,6 +21,17 @@ export function countryName(code: string): string {
   try { return regionNames?.of(code) ?? code } catch { return code }
 }
 
+let codeByName: Map<string, string> | null = null
+/** The code for an English country name ("NZ" for "New Zealand"), or null when it is not one we know. */
+export function countryCodeOf(name: string): string | null {
+  if (!codeByName) {
+    codeByName = new Map(CODES.map(c => [countryName(c).toLowerCase(), c] as const))
+    for (const [alias, code] of Object.entries({ usa: 'US', 'united states of america': 'US', uk: 'GB', 'united kingdom': 'GB', uae: 'AE', 'south korea': 'KR', nz: 'NZ', aus: 'AU' })) codeByName.set(alias, code)
+  }
+  const k = name.trim().toLowerCase()
+  return codeByName.get(k) ?? (/^[a-z]{2}$/.test(k) && CODES.includes(k.toUpperCase()) ? k.toUpperCase() : null)
+}
+
 /**
  * Country picker that stores the English country name. A value that is not in
  * the list (an older free-text entry) is kept as its own option so editing a

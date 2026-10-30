@@ -1,5 +1,5 @@
 import L from 'leaflet'
-import { ArrowLeft, Globe, MapPin, Store } from 'lucide-react'
+import { ArrowLeft, Globe, MapPin, Store, Tag } from 'lucide-react'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import type { Business } from '@trek/shared'
@@ -12,7 +12,10 @@ import { useTranslation } from '../i18n'
 import AtlasCountrySearch from './atlas/AtlasCountrySearch'
 import BusinessDetailDialog from '../components/Udyami/BusinessDetailDialog'
 import BusinessFormDialog from '../components/Udyami/BusinessFormDialog'
-import { OSM_ATTRIBUTION, OSM_TILES } from '../components/Udyami/LocationPicker'
+import { attachVectorBasemap, detachBasemapLayer, restyleBasemap, type BasemapLayer } from '../components/Map/VectorBasemap'
+import { OFM_DARK, OFM_POSITRON } from '../constants/mapDefaults'
+import { useTileUrl } from '../hooks/useTileUrl'
+import { CONTINENT_MAP } from '@trek/shared'
 import { useToast } from '../components/shared/Toast'
 import { useSettingsStore } from '../store/settingsStore'
 import type { GeoJsonFeatureCollection } from '../types'
@@ -72,6 +75,11 @@ export default function WorldMapPage() {
   const mapInstance = useRef<L.Map | null>(null)
   const layerRef = useRef<L.GeoJSON | null>(null)
   const pinsRef = useRef<L.LayerGroup | null>(null)
+  const glLayerRef = useRef<BasemapLayer | null>(null)
+  // The same free OpenFreeMap background the original Atlas draws, light or dark.
+  const tileUrl = useTileUrl(dark ? OFM_DARK : OFM_POSITRON, true)
+  const tileUrlRef = useRef(tileUrl)
+  tileUrlRef.current = tileUrl
   // Zoomed in far enough for street tiles, which is also when listings show as pins.
   const [street, setStreet] = useState(false)
   const [geo, setGeo] = useState<GeoJsonFeatureCollection | null>(null)
@@ -82,7 +90,7 @@ export default function WorldMapPage() {
   const [searchOpen, setSearchOpen] = useState(false)
   const { t } = useTranslation()
   const glare = useGlassGlare(dark)
-  const [tab, setTab] = useState<'stats' | 'countries'>('stats')
+  const [tab, setTab] = useState<'stats' | 'countries' | 'categories'>('stats')
   const [open, setOpen] = useState<Business | null>(null)
   const [editing, setEditing] = useState<Business | null>(null)
   const resolve = useCountryResolver(geo)
@@ -125,26 +133,38 @@ export default function WorldMapPage() {
   useEffect(() => {
     if (!mapRef.current || mapInstance.current) return
     const map = L.map(mapRef.current, {
-      center: [20, 40], zoom: 2, minZoom: 2, maxZoom: 18, zoomControl: false, attributionControl: false,
-      maxBounds: [[-75, -220], [85, 220]], maxBoundsViscosity: 1, preferCanvas: true, worldCopyJump: false,
+      center: [25, 0], zoom: 3, minZoom: 3, maxZoom: 18, zoomControl: false, attributionControl: false,
+      maxBounds: [[-90, -220], [90, 220]], maxBoundsViscosity: 1, fadeAnimation: false, preferCanvas: true, worldCopyJump: false,
     })
     L.control.zoom({ position: 'bottomright' }).addTo(map)
-    // Street tiles only from zoom 5, so the world view downloads nothing extra.
-    L.tileLayer(OSM_TILES, { minZoom: 5, maxZoom: 19, attribution: OSM_ATTRIBUTION, zIndex: 1 }).addTo(map)
-    L.control.attribution({ prefix: false, position: 'bottomleft' }).addTo(map)
+    // Per run, not a shared flag: the basemap loads asynchronously and a map that has
+    // already been torn down (a dev double mount, a quick navigation) must not get a layer.
+    let cancelled = false
+    void attachVectorBasemap(map, tileUrlRef.current, glLayerRef, () => cancelled)
     pinsRef.current = L.layerGroup().addTo(map)
-    map.on('zoomend', () => setStreet(map.getZoom() >= 5))
+    map.on('zoomend', () => setStreet(map.getZoom() >= 6))
     mapInstance.current = map
-    return () => { map.remove(); mapInstance.current = null }
+    return () => {
+      cancelled = true
+      detachBasemapLayer(glLayerRef.current)
+      glLayerRef.current = null
+      map.remove()
+      mapInstance.current = null
+    }
   }, [])
+
+  // Light and dark switch in place, without rebuilding the map.
+  useEffect(() => {
+    if (glLayerRef.current) restyleBasemap(glLayerRef.current, tileUrl)
+  }, [tileUrl])
 
   // Country fills, redrawn when the data, the selection or the theme changes.
   useEffect(() => {
     const map = mapInstance.current
     if (!map || !geo) return
     layerRef.current?.remove()
-    const empty = dark ? '#2a2a30' : '#E4ECEF'
-    const border = dark ? '#3f3f46' : '#ffffff'
+    const empty = dark ? '#1e1e2e' : '#e2e8f0'
+    const border = dark ? '#333333' : '#cbd5e1'
     const layer = L.geoJSON(geo as unknown as GeoJSON.GeoJsonObject, {
       style: (f) => {
         const a2 = (f?.properties as Record<string, string> | undefined)?.ISO_A2 ?? ''
@@ -153,7 +173,7 @@ export default function WorldMapPage() {
         return {
           fillColor: n ? (dark ? '#47A8FA' : '#1F4455') : empty,
           // Zoomed in, the fill gets out of the way of the streets underneath.
-          fillOpacity: street ? (n ? 0.12 : 0) : (n ? strength : 1),
+          fillOpacity: street ? (n ? 0.12 : 0) : (n ? Math.max(0.55, strength) : 0.3),
           color: a2 === selected ? (dark ? '#ffffff' : '#F2A900') : (street ? 'rgba(0,0,0,0.25)' : border),
           weight: a2 === selected ? 2.5 : (street ? 1 : 0.6),
         }
@@ -244,6 +264,18 @@ export default function WorldMapPage() {
     both: businesses.filter(b => b.community === 'both').length,
   }), [businesses])
 
+  // Listed countries by continent, and listings by type of business.
+  const byContinent = useMemo(() => {
+    const c: Record<string, number> = {}
+    for (const [, g] of groups) if (g.code) { const k = CONTINENT_MAP[g.code]; if (k) c[k] = (c[k] ?? 0) + 1 }
+    return c
+  }, [groups])
+  const byCategory = useMemo(() => {
+    const m = new Map<string, number>()
+    for (const b of businesses) { const k = b.category.trim() || 'Other'; m.set(k, (m.get(k) ?? 0) + 1) }
+    return [...m.entries()].sort((a, b) => b[1] - a[1])
+  }, [businesses])
+
   // Every country the map knows, so the search finds places with no listings too.
   const allCountries = useMemo(() => {
     const out: { code: string; name: string }[] = []
@@ -292,7 +324,7 @@ export default function WorldMapPage() {
 
   const tabBar = (
     <div style={{ display: 'flex', gap: 4, padding: '12px 16px 0', marginBottom: 4 }}>
-      {([['stats', 'Stats', Globe], ['countries', 'Countries', MapPin]] as const).map(([id, label, Icon]) => (
+      {([['stats', 'Stats', Globe], ['countries', 'Countries', MapPin], ['categories', 'Categories', Tag]] as const).map(([id, label, Icon]) => (
         <button
           type="button" key={id} onClick={() => setTab(id)}
           style={{
@@ -339,7 +371,7 @@ export default function WorldMapPage() {
             onMouseMove={glare.onMouseMove}
             onMouseLeave={glare.onMouseLeave}
             className="pointer-events-auto relative flex max-w-full flex-col overflow-hidden"
-            style={{ ...glassPanel, width: 'fit-content', minWidth: 'min(100%, 420px)' }}
+            style={{ ...glassPanel, width: 'fit-content', minWidth: 'min(100%, 420px)', maxWidth: 'min(1100px, 100%)' }}
           >
             <div ref={glare.glareRef} className="pointer-events-none absolute inset-0" style={{ opacity: 0, transition: 'opacity 0.3s ease', borderRadius: 20 }} />
             <div ref={glare.borderGlareRef} className="pointer-events-none absolute inset-0" style={{ opacity: 0, transition: 'opacity 0.3s ease', borderRadius: 20, border: dark ? '1.5px solid rgba(255,255,255,0.5)' : '2px solid rgba(0,0,0,0.15)' }} />
@@ -402,10 +434,21 @@ export default function WorldMapPage() {
                       </div>
                       {stat(businesses.length, businesses.length === 1 ? 'Business' : 'Businesses')}
                       {stat(totalCities, totalCities === 1 ? 'City' : 'Cities')}
-                      <div className="hidden sm:block" style={{ width: 2, background: bg(0.08), margin: '12px 14px' }} />
                       {stat(byCommunity.nepali, 'Nepali')}
                       {stat(byCommunity.indian, 'Indian')}
                       {stat(byCommunity.both, 'Both')}
+                      <div className="hidden sm:block" style={{ width: 2, background: bg(0.08), margin: '12px 14px' }} />
+                      <div className="flex items-center gap-4 px-3 py-4">
+                        {(['Europe', 'Asia', 'North America', 'South America', 'Africa', 'Oceania'] as const).map(cont => {
+                          const count = byContinent[cont] ?? 0
+                          return (
+                            <div key={cont} className="flex shrink-0 flex-col items-center">
+                              <span className="text-2xl font-black tabular-nums leading-none" style={{ color: count ? tp : bg(0.15) }}>{count}</span>
+                              <span className="mt-1.5 whitespace-nowrap text-[9px] font-semibold uppercase tracking-wide" style={{ color: count ? tf : bg(0.1) }}>{cont}</span>
+                            </div>
+                          )
+                        })}
+                      </div>
                     </div>
                   </div>
                   <div style={tab !== 'countries' ? { visibility: 'hidden', gridArea: '1/1' } : { gridArea: '1/1' }}>
@@ -426,6 +469,19 @@ export default function WorldMapPage() {
                           <span className="max-w-[96px] truncate text-xs font-semibold" style={{ color: tp }}>{g.name}</span>
                           <span className="mt-0.5 text-[10px]" style={{ color: tf }}>{g.businesses.length} listed</span>
                         </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={tab !== 'categories' ? { visibility: 'hidden', gridArea: '1/1' } : { gridArea: '1/1' }}>
+                    <div className="flex items-stretch overflow-x-auto px-2" style={{ maxWidth: 'min(920px, calc(100vw - 40px))' }}>
+                      {byCategory.length === 0 && (
+                        <div className="flex items-center justify-center px-6 py-5 text-sm" style={{ color: tf }}>No businesses listed yet.</div>
+                      )}
+                      {byCategory.map(([name, n]) => (
+                        <div key={name} className="flex min-w-[92px] shrink-0 flex-col items-center justify-center px-3.5 py-4">
+                          <span className="text-2xl font-black tabular-nums leading-none" style={{ color: tp }}>{n}</span>
+                          <span className="mt-1.5 max-w-[110px] truncate text-[10px] font-semibold uppercase tracking-wide" style={{ color: tf }}>{name}</span>
+                        </div>
                       ))}
                     </div>
                   </div>

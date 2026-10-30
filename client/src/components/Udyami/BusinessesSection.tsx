@@ -1,4 +1,4 @@
-import { Search, Store, X } from 'lucide-react'
+import { Plus, Search, Store, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import type { Business, BusinessListScope } from '@trek/shared'
 import { businessesApi } from '../../api/udyami'
@@ -26,7 +26,9 @@ const EMPTY_TEXT: Record<BusinessListScope, string> = {
  * The directory on Home: All / Mine / Saved (and To review for admins), a
  * search box, and a grid of listings. Opens details, add and edit dialogs.
  */
-export default function BusinessesSection({ addOpen, onAddClose, onChanged }: {
+export default function BusinessesSection({ addOpen, onAddClose, onChanged, onAdd }: {
+  /** The "New" tile at the end of the grid; left out when nothing handles it. */
+  onAdd?: () => void
   /** The page's "Add business" button sets this. */
   addOpen: boolean
   onAddClose: () => void
@@ -135,6 +137,13 @@ export default function BusinessesSection({ addOpen, onAddClose, onChanged }: {
         {businesses?.map(b => (
           <BusinessCard key={b.id} business={b} onOpen={() => setOpen(b)} onToggleSave={() => toggleSave(b)} />
         ))}
+        {onAdd && businesses !== null && scope === 'all' && !query && (
+          <button type="button" onClick={onAdd} className="flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-[20px] border border-dashed border-edge bg-transparent p-6 text-center hover:bg-surface-hover">
+            <span className="grid h-12 w-12 place-items-center rounded-full bg-bg-inverse text-white"><Plus size={22} /></span>{/* theme-lint-disable: icon on the inverse fill */}
+            <span className="text-[15px] font-semibold text-content">Add business</span>
+            <span className="text-caption text-content-muted">List a business in the directory</span>
+          </button>
+        )}
       </div>
 
       {open && (

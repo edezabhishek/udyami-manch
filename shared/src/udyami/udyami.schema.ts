@@ -156,6 +156,8 @@ export const businessStatusRequestSchema = z.object({ status: businessStatusSche
 export const directoryStatsSchema = z.object({
   businesses: z.number().int(),
   countries: z.number().int(),
+  /** The listed countries by name, for the flags on the Home card. */
+  country_names: z.array(z.string()),
   cities: z.number().int(),
   mine: z.number().int(),
   saved: z.number().int(),

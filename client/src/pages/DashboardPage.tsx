@@ -176,7 +176,7 @@ function DashboardPageDesktop(): React.ReactElement {
             {/* Udyami Manch: directory numbers and listings replace TREK's trip stats and trip grid. */}
             <DirectoryStats refreshKey={dirKey} />
 
-            <BusinessesSection addOpen={addBusiness} onAddClose={() => setAddBusiness(false)} onChanged={() => setDirKey(k => k + 1)} />
+            <BusinessesSection addOpen={addBusiness} onAdd={() => setAddBusiness(true)} onAddClose={() => setAddBusiness(false)} onChanged={() => setDirKey(k => k + 1)} />
           </div>
 
           {sidebarVisible && (
