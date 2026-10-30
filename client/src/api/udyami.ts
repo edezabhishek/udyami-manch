@@ -11,6 +11,7 @@ import type {
   BusinessStatus,
   BusinessUpsertRequest,
   DirectoryStats,
+  GeocodeResponse,
   CurrentSpotlightResponse,
   Nomination,
   NominationCreateRequest,
@@ -59,6 +60,11 @@ export const businessesApi = {
   setStatus: (id: number, status: BusinessStatus): Promise<{ business: Business }> =>
     apiClient.patch(`/udyami/businesses/${id}/status`, { status }).then(r => r.data),
   stats: (): Promise<DirectoryStats> => apiClient.get('/udyami/directory-stats').then(r => r.data),
+}
+
+/** /api/udyami/geocode — turns a typed address into places on the map. */
+export const geocodeApi = {
+  search: (q: string): Promise<GeocodeResponse> => apiClient.get('/udyami/geocode', { params: { q }, timeout: 20000 }).then(r => r.data),
 }
 
 export const COMMUNITY_LABEL: Record<'nepali' | 'indian' | 'both', string> = {

@@ -16,6 +16,8 @@ export interface BusinessRow {
   city: string;
   country: string;
   address: string | null;
+  latitude: number | null;
+  longitude: number | null;
   phone: string | null;
   email: string | null;
   website: string | null;
@@ -50,6 +52,8 @@ function toBusinessRow(e: UdyamiBusinesses): BusinessRow {
     city: e.city,
     country: e.country,
     address: e.address ?? null,
+    latitude: e.latitude ?? null,
+    longitude: e.longitude ?? null,
     phone: e.phone ?? null,
     email: e.email ?? null,
     website: e.website ?? null,

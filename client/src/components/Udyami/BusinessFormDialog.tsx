@@ -1,22 +1,24 @@
-import { Store } from 'lucide-react'
+import { MapPin, Search, Store } from 'lucide-react'
 import { useId, useState, type FormEvent } from 'react'
-import type { Business, BusinessCommunity, BusinessUpsertRequest } from '@trek/shared'
-import { businessesApi, COMMUNITY_LABEL } from '../../api/udyami'
+import type { Business, BusinessCommunity, BusinessUpsertRequest, GeocodeResult } from '@trek/shared'
+import { businessesApi, COMMUNITY_LABEL, geocodeApi } from '../../api/udyami'
 import { useAuthStore } from '../../store/authStore'
 import { DialogButton, DialogFooter, DialogHeader, DialogShell, FooterSpacer, NEUTRAL_TINT } from '../shared/DialogShell'
 import { useToast } from '../shared/Toast'
 import CountrySelect from './CountrySelect'
+import LocationPicker from './LocationPicker'
 
 const FIELD = 'w-full rounded-[10px] border border-edge bg-surface-input px-3 py-2 text-body text-content outline-none focus:border-accent'
 const LABEL = 'mb-1 block text-caption font-semibold text-content-secondary'
 
-type FormState = Required<{ [K in keyof BusinessUpsertRequest]: string }>
+type FormState = Required<{ [K in Exclude<keyof BusinessUpsertRequest, 'latitude' | 'longitude'>]: string }> & { latitude: number | null; longitude: number | null }
 
 function toForm(b?: Business | null): FormState {
   return {
     name: b?.name ?? '', category: b?.category ?? '', community: b?.community ?? 'nepali',
     description: b?.description ?? '', city: b?.city ?? '', country: b?.country ?? '', address: b?.address ?? '',
     phone: b?.phone ?? '', email: b?.email ?? '', website: b?.website ?? '', photo_url: b?.photo_url ?? '',
+    latitude: b?.latitude ?? null, longitude: b?.longitude ?? null,
   }
 }
 
@@ -33,8 +35,30 @@ export default function BusinessFormDialog({ business, onClose, onSaved }: {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const editing = !!business
+  const [hits, setHits] = useState<GeocodeResult[] | null>(null)
+  const [searching, setSearching] = useState(false)
 
-  const set = (key: keyof FormState) => (e: { target: { value: string } }) => setForm(f => ({ ...f, [key]: e.target.value }))
+  const findAddress = async () => {
+    const q = [form.address, form.city, form.country].filter(s => s.trim()).join(', ')
+    if (q.trim().length < 3) { setError('Type an address first.'); return }
+    setSearching(true)
+    setError(null)
+    try {
+      const { results } = await geocodeApi.search(q)
+      setHits(results)
+      if (results.length === 0) setError('No match found. Click the map to place the pin yourself.')
+    } catch {
+      setError('Address search is not available right now. Click the map to place the pin yourself.')
+    } finally {
+      setSearching(false)
+    }
+  }
+  const useHit = (h: GeocodeResult) => {
+    setForm(f => ({ ...f, latitude: h.latitude, longitude: h.longitude, address: f.address.trim() ? f.address : (h.address ?? ''), city: f.city.trim() ? f.city : (h.city ?? ''), country: f.country.trim() ? f.country : (h.country ?? '') }))
+    setHits(null)
+  }
+
+  const set = (key: Exclude<keyof FormState, 'latitude' | 'longitude'>) => (e: { target: { value: string } }) => setForm(f => ({ ...f, [key]: e.target.value }))
   const canSubmit = !!(form.name.trim() && form.category.trim() && form.city.trim() && form.country.trim()) && !saving
 
   const submit = async (e: FormEvent<HTMLFormElement>) => {
@@ -42,7 +66,7 @@ export default function BusinessFormDialog({ business, onClose, onSaved }: {
     if (!canSubmit) return
     setSaving(true)
     setError(null)
-    const body: BusinessUpsertRequest = { ...form, community: form.community as BusinessCommunity }
+    const body: BusinessUpsertRequest = { ...form, community: form.community as BusinessCommunity, latitude: form.latitude, longitude: form.longitude }
     try {
       const { business: saved } = editing ? await businessesApi.update(business!.id, body) : await businessesApi.create(body)
       toast.success(saved.status === 'approved' ? 'Listing saved' : 'Sent for review. It appears in the directory once approved.')
@@ -105,7 +129,33 @@ export default function BusinessFormDialog({ business, onClose, onSaved }: {
         </div>
         <div className="sm:col-span-2">
           <label className={LABEL} htmlFor={`${labelId}-address`}>Address</label>
-          <input id={`${labelId}-address`} className={FIELD} value={form.address} onChange={set('address')} maxLength={200} />
+          <div className="flex gap-2">
+            <input id={`${labelId}-address`} className={FIELD} value={form.address} onChange={set('address')} maxLength={200} placeholder="12 Queen Street" onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); void findAddress() } }} />
+            <button type="button" onClick={() => void findAddress()} disabled={searching} className="inline-flex flex-none items-center gap-1.5 rounded-[10px] border border-edge bg-surface-card px-3 text-body font-semibold text-content hover:bg-surface-hover disabled:opacity-60">
+              <Search size={14} /> {searching ? 'Searching…' : 'Find on map'}
+            </button>
+          </div>
+          {hits && hits.length > 0 && (
+            <ul className="m-0 mt-2 list-none overflow-hidden rounded-[12px] border border-edge p-0">
+              {hits.map((h, i) => (
+                <li key={`${h.latitude},${h.longitude},${i}`}>
+                  <button type="button" onClick={() => useHit(h)} className="flex w-full items-start gap-2 px-3 py-2 text-start text-caption text-content hover:bg-surface-hover">
+                    <MapPin size={14} className="mt-[2px] flex-none text-content-muted" /> <span>{h.label}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <div className="sm:col-span-2">
+          <div className="mb-1 flex items-center justify-between">
+            <span className={LABEL.replace('mb-1 ', '')}>Location on the map</span>
+            {form.latitude != null && (
+              <button type="button" onClick={() => setForm(f => ({ ...f, latitude: null, longitude: null }))} className="text-caption text-content-muted underline">Remove pin</button>
+            )}
+          </div>
+          <LocationPicker latitude={form.latitude} longitude={form.longitude} onChange={(latitude, longitude) => setForm(f => ({ ...f, latitude, longitude }))} />
+          <p className="m-0 mt-1 text-caption text-content-muted">Click the map or drag the pin to the exact spot. Customers can then get directions.</p>
         </div>
         <div>
           <label className={LABEL} htmlFor={`${labelId}-phone`}>Phone</label>

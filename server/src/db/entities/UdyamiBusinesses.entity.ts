@@ -14,6 +14,8 @@ export class UdyamiBusinesses {
   city!: string;
   country!: string;
   address?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   phone?: string | null;
   email?: string | null;
   website?: string | null;
@@ -36,6 +38,8 @@ export const UdyamiBusinessesSchema = defineEntity({
     city: p.text(),
     country: p.text(),
     address: p.text().nullable(),
+    latitude: p.double().nullable(),
+    longitude: p.double().nullable(),
     phone: p.text().nullable(),
     email: p.text().nullable(),
     website: p.text().nullable(),

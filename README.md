@@ -70,7 +70,7 @@ Installs on your phone like an app, with no app store. Home, Events, a quick **+
 - **List your business.** Anyone can add a listing in a minute. Admins approve new ones.
 - **Country and city browsing.** Countries are picked from a list, so the counts stay clean.
 - **Register for events.** The join link appears once you register. Add the event to your calendar.
-- **World map.** See Nepali and Indian owned businesses country by country.
+- **World map.** See Nepali and Indian owned businesses country by country, then zoom in to street level to find each business. Every listing can show its exact spot, with links for directions. Maps and address search come from OpenStreetMap.
 - **Light and dark mode.** Both follow your phone.
 - **Admin tools.** Review listings, approve events, and choose the Udyami of the Month.
 - **Jobs board** *(coming soon)*. Open to everyone.

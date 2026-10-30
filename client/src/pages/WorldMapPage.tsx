@@ -12,9 +12,16 @@ import { useTranslation } from '../i18n'
 import AtlasCountrySearch from './atlas/AtlasCountrySearch'
 import BusinessDetailDialog from '../components/Udyami/BusinessDetailDialog'
 import BusinessFormDialog from '../components/Udyami/BusinessFormDialog'
+import { OSM_ATTRIBUTION, OSM_TILES } from '../components/Udyami/LocationPicker'
 import { useToast } from '../components/shared/Toast'
 import { useSettingsStore } from '../store/settingsStore'
 import type { GeoJsonFeatureCollection } from '../types'
+
+const PIN = L.divIcon({
+  className: '',
+  html: '<div style="width:26px;height:26px;border-radius:50% 50% 50% 0;background:#1F4455;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35);transform:rotate(-45deg);margin:-26px 0 0 -13px"></div>',
+  iconSize: [0, 0],
+})
 
 /** Common ways people write a country that the map's own names do not cover. */
 const COUNTRY_ALIASES: Record<string, string> = {
@@ -64,6 +71,9 @@ export default function WorldMapPage() {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstance = useRef<L.Map | null>(null)
   const layerRef = useRef<L.GeoJSON | null>(null)
+  const pinsRef = useRef<L.LayerGroup | null>(null)
+  // Zoomed in far enough for street tiles, which is also when listings show as pins.
+  const [street, setStreet] = useState(false)
   const [geo, setGeo] = useState<GeoJsonFeatureCollection | null>(null)
   const [businesses, setBusinesses] = useState<Business[]>([])
   const [selected, setSelected] = useState<string | null>(null)
@@ -115,10 +125,15 @@ export default function WorldMapPage() {
   useEffect(() => {
     if (!mapRef.current || mapInstance.current) return
     const map = L.map(mapRef.current, {
-      center: [20, 40], zoom: 2, minZoom: 2, maxZoom: 8, zoomControl: false, attributionControl: false,
+      center: [20, 40], zoom: 2, minZoom: 2, maxZoom: 18, zoomControl: false, attributionControl: false,
       maxBounds: [[-75, -220], [85, 220]], maxBoundsViscosity: 1, preferCanvas: true, worldCopyJump: false,
     })
     L.control.zoom({ position: 'bottomright' }).addTo(map)
+    // Street tiles only from zoom 5, so the world view downloads nothing extra.
+    L.tileLayer(OSM_TILES, { minZoom: 5, maxZoom: 19, attribution: OSM_ATTRIBUTION, zIndex: 1 }).addTo(map)
+    L.control.attribution({ prefix: false, position: 'bottomleft' }).addTo(map)
+    pinsRef.current = L.layerGroup().addTo(map)
+    map.on('zoomend', () => setStreet(map.getZoom() >= 5))
     mapInstance.current = map
     return () => { map.remove(); mapInstance.current = null }
   }, [])
@@ -137,9 +152,10 @@ export default function WorldMapPage() {
         const strength = n ? 0.45 + 0.55 * (n / max) : 0
         return {
           fillColor: n ? (dark ? '#47A8FA' : '#1F4455') : empty,
-          fillOpacity: n ? strength : 1,
-          color: a2 === selected ? (dark ? '#ffffff' : '#F2A900') : border,
-          weight: a2 === selected ? 2.5 : 0.6,
+          // Zoomed in, the fill gets out of the way of the streets underneath.
+          fillOpacity: street ? (n ? 0.12 : 0) : (n ? strength : 1),
+          color: a2 === selected ? (dark ? '#ffffff' : '#F2A900') : (street ? 'rgba(0,0,0,0.25)' : border),
+          weight: a2 === selected ? 2.5 : (street ? 1 : 0.6),
         }
       },
       onEachFeature: (f, l) => {
@@ -151,7 +167,22 @@ export default function WorldMapPage() {
     })
     layer.addTo(map)
     layerRef.current = layer
-  }, [geo, counts, max, selected, dark])
+  }, [geo, counts, max, selected, dark, street])
+
+  // A pin for every listing that has a location, once the map is zoomed in far enough to use it.
+  useEffect(() => {
+    const group = pinsRef.current
+    if (!group) return
+    group.clearLayers()
+    if (!street) return
+    for (const b of businesses) {
+      if (b.latitude == null || b.longitude == null) continue
+      const pin = L.marker([b.latitude, b.longitude], { icon: PIN, riseOnHover: true })
+      pin.bindTooltip(`<strong>${b.name.replace(/</g, '&lt;')}</strong><br/>${b.category.replace(/</g, '&lt;')}`, { direction: 'top', offset: [0, -28] })
+      pin.on('click', () => setOpen(b))
+      pin.addTo(group)
+    }
+  }, [businesses, street])
 
   /**
    * Bounds of the given countries, from each country's largest polygon only. Its

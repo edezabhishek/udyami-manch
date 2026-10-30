@@ -71,6 +71,20 @@ export default function BusinessDetailDialog({ business, onClose, onToggleSave, 
       {business.description && <p className="m-0 whitespace-pre-line text-body leading-relaxed text-content-secondary">{business.description}</p>}
       <div className="flex flex-col gap-3">
         <div className={ROW}><MapPin size={16} className="mt-[2px] flex-none text-content-muted" /><span>{[business.address, business.city, business.country].filter(Boolean).join(', ')}</span></div>
+        {(() => {
+          // Plain links to Google Maps: no Google service is called from here, the visitor just follows the link.
+          const where = business.latitude != null && business.longitude != null
+            ? `${business.latitude},${business.longitude}`
+            : [business.name, business.address, business.city, business.country].filter(Boolean).join(', ')
+          const q = encodeURIComponent(where)
+          const link = 'inline-flex items-center gap-1 rounded-full border border-edge px-3 py-1 text-caption font-semibold text-content no-underline hover:bg-surface-hover'
+          return (
+            <div className="flex flex-wrap gap-2 ps-6">
+              <a className={link} href={`https://www.google.com/maps/search/?api=1&query=${q}`} target="_blank" rel="noopener noreferrer"><MapPin size={12} /> Open in Google Maps</a>
+              <a className={link} href={`https://www.google.com/maps/dir/?api=1&destination=${q}`} target="_blank" rel="noopener noreferrer">Get directions</a>
+            </div>
+          )
+        })()}
         {business.phone && <div className={ROW}><Phone size={16} className="mt-[2px] flex-none text-content-muted" /><a className="text-accent-on no-underline hover:underline" href={`tel:${business.phone}`}>{business.phone}</a></div>}
         {business.email && <div className={ROW}><Mail size={16} className="mt-[2px] flex-none text-content-muted" /><a className="text-accent-on no-underline hover:underline" href={`mailto:${business.email}`}>{business.email}</a></div>}
         {business.website && <div className={ROW}><Globe size={16} className="mt-[2px] flex-none text-content-muted" /><a className="truncate text-accent-on no-underline hover:underline" href={business.website} target="_blank" rel="noopener noreferrer">{business.website.replace(/^https?:\/\//, '')}</a></div>}

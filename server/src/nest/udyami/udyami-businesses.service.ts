@@ -41,6 +41,9 @@ function fieldsOf(body: BusinessUpsertRequest): BusinessFields {
     city: body.city.trim(),
     country: body.country.trim(),
     address: blankToNull(body.address),
+    // A pin needs both numbers; one alone means nothing.
+    latitude: body.latitude != null && body.longitude != null ? body.latitude : null,
+    longitude: body.latitude != null && body.longitude != null ? body.longitude : null,
     phone: blankToNull(body.phone),
     email: blankToNull(body.email),
     website: blankToNull(body.website),

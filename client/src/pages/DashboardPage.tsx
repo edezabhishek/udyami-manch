@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router'
 import UdyamiSpotlightHero from '../components/Udyami/UdyamiSpotlightHero'
 import BusinessesSection from '../components/Udyami/BusinessesSection'
 import DirectoryStats from '../components/Udyami/DirectoryStats'
@@ -119,6 +120,13 @@ function DashboardPageDesktop(): React.ReactElement {
   const appearanceCfg = useSettingsStore(s => s.settings.appearance)
   const dashCfg = normalizeAppearance(appearanceCfg).dashboard
   const [addBusiness, setAddBusiness] = React.useState(false)
+  // Coming back from sign-in with ?addBusiness=1 (the public home's "List your business") opens the form.
+  const [searchParams, setSearchParams] = useSearchParams()
+  React.useEffect(() => {
+    if (searchParams.get('addBusiness') !== '1') return
+    setAddBusiness(true)
+    setSearchParams(prev => { const next = new URLSearchParams(prev); next.delete('addBusiness'); return next }, { replace: true })
+  }, [searchParams, setSearchParams])
   const [dirKey, setDirKey] = React.useState(0)
   const sideWidgets = dashCfg.desktop
   const showCurrency = sideWidgets.currency

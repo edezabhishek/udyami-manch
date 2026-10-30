@@ -113,6 +113,8 @@ export const businessSchema = z.object({
   city: z.string(),
   country: z.string(),
   address: z.string().nullable(),
+  latitude: z.number().nullable(),
+  longitude: z.number().nullable(),
   phone: z.string().nullable(),
   email: z.string().nullable(),
   website: z.string().nullable(),
@@ -133,6 +135,8 @@ export const businessUpsertRequestSchema = z.object({
   city: z.string().trim().min(1).max(80),
   country: z.string().trim().min(1).max(80),
   address: optionalText(200),
+  latitude: z.number().min(-90).max(90).nullable().optional(),
+  longitude: z.number().min(-180).max(180).nullable().optional(),
   phone: optionalText(40),
   email: z.string().trim().max(200).email().nullable().optional().or(z.literal('')),
   website: httpUrl.nullable().optional().or(z.literal('')),
@@ -212,3 +216,16 @@ export const eventResponseSchema = z.object({ event: eventSchema });
 export const eventListResponseSchema = z.object({ events: z.array(eventSchema) });
 export type EventListResponse = z.infer<typeof eventListResponseSchema>;
 export const eventStatusRequestSchema = z.object({ status: eventStatusSchema });
+
+/** One place a typed address can mean, as the address search returns it. */
+export const geocodeResultSchema = z.object({
+  label: z.string(),
+  latitude: z.number(),
+  longitude: z.number(),
+  address: z.string().nullable(),
+  city: z.string().nullable(),
+  country: z.string().nullable(),
+});
+export type GeocodeResult = z.infer<typeof geocodeResultSchema>;
+export const geocodeResponseSchema = z.object({ results: z.array(geocodeResultSchema) });
+export type GeocodeResponse = z.infer<typeof geocodeResponseSchema>;
