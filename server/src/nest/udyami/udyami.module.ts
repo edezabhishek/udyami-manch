@@ -1,3 +1,4 @@
+import { AppSettings } from '../../db/entities/AppSettings.entity';
 import { UdyamiBusinesses } from '../../db/entities/UdyamiBusinesses.entity';
 import { UdyamiSavedBusinesses } from '../../db/entities/UdyamiSavedBusinesses.entity';
 import { UdyamiEventRsvps } from '../../db/entities/UdyamiEventRsvps.entity';
@@ -11,6 +12,7 @@ import { UdyamiEventsController } from './udyami-events.controller';
 import { UdyamiGeocodeController } from './udyami-geocode.controller';
 import { UdyamiGeocodeService } from './udyami-geocode.service';
 import { UdyamiMapController } from './udyami-map.controller';
+import { UdyamiStarterListingsService } from './udyami-starter-listings.service';
 import { UdyamiEventsService } from './udyami-events.service';
 import { UdyamiController } from './udyami.controller';
 import { UdyamiService } from './udyami.service';
@@ -19,8 +21,8 @@ import { Module } from '@nestjs/common';
 
 /** Udyami Manch: "Udyami of the Month" and nominations. Registered in AppModule. */
 @Module({
-  imports: [MikroOrmModule.forFeature([UdyamiSpotlights, UdyamiNominations, UdyamiBusinesses, UdyamiSavedBusinesses, UdyamiEvents, UdyamiEventRsvps, Users])],
+  imports: [MikroOrmModule.forFeature([AppSettings, UdyamiSpotlights, UdyamiNominations, UdyamiBusinesses, UdyamiSavedBusinesses, UdyamiEvents, UdyamiEventRsvps, Users])],
   controllers: [UdyamiController, UdyamiBusinessesController, UdyamiEventsController, UdyamiMapController, UdyamiGeocodeController],
-  providers: [UdyamiService, UdyamiBusinessesService, UdyamiEventsService, UdyamiGeocodeService],
+  providers: [UdyamiService, UdyamiBusinessesService, UdyamiEventsService, UdyamiGeocodeService, UdyamiStarterListingsService],
 })
 export class UdyamiModule {}

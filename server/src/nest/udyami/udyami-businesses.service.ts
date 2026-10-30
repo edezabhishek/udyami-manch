@@ -74,7 +74,9 @@ export class UdyamiBusinessesService {
   }
 
   private present(row: BusinessRow, user: User, savedIds: Set<number>): Business {
-    return { ...row, saved: savedIds.has(row.id), is_mine: row.owner_user_id === user.id };
+    // The account behind a listing is not public: only the owner and admins get that number.
+    const sees = row.owner_user_id === user.id || user.role === 'admin';
+    return { ...row, owner_user_id: sees ? row.owner_user_id : null, saved: savedIds.has(row.id), is_mine: row.owner_user_id === user.id };
   }
 
   private async visible(id: number, user: User): Promise<BusinessRow> {

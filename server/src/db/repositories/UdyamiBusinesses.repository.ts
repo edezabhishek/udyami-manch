@@ -92,7 +92,7 @@ export class UdyamiBusinessesRepository extends TrekRepository<UdyamiBusinesses>
     return row ? toBusinessRow(row) : null;
   }
 
-  async createBusiness(ownerUserId: number, fields: BusinessFields, status: BusinessStatusValue): Promise<number> {
+  async createBusiness(ownerUserId: number | null, fields: BusinessFields, status: BusinessStatusValue): Promise<number> {
     const id = await this.insert({ ...fields, owner_user_id: ownerUserId, status });
     return Number(id);
   }
