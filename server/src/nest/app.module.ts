@@ -93,6 +93,7 @@ import { SkiRoutingModule } from './ski-routing/ski-routing.module';
 import { StorageModule } from './storage/storage.module';
 import { SystemNoticesModule } from './system-notices/system-notices.module';
 import { TagsModule } from './tags/tags.module';
+import { SeoModule } from './seo/seo.module';
 import { UdyamiModule } from './udyami/udyami.module';
 import { TodoModule } from './todo/todo.module';
 import { ToursModule } from './tours/tours.module';
@@ -147,6 +148,7 @@ import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
     CategoriesModule,
     TagsModule,
     UdyamiModule,
+    SeoModule,
     NotificationsModule,
     AtlasModule,
     VacayModule,

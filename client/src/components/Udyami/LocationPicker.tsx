@@ -15,11 +15,13 @@ const PIN = L.divIcon({
  * where the business is. With no pin yet it shows the world, and it flies to a
  * pin that is set from outside, such as an address search result.
  */
-export default function LocationPicker({ latitude, longitude, onChange, height = 240 }: {
+export default function LocationPicker({ latitude, longitude, onChange, height = 240, readOnly = false }: {
   latitude: number | null
   longitude: number | null
   onChange: (latitude: number, longitude: number) => void
   height?: number
+  /** A plain map with the pin fixed in place, for showing where a business is. */
+  readOnly?: boolean
 }) {
   const el = useRef<HTMLDivElement>(null)
   const map = useRef<L.Map | null>(null)
@@ -32,7 +34,7 @@ export default function LocationPicker({ latitude, longitude, onChange, height =
     const has = latitude != null && longitude != null
     const m = L.map(el.current, { center: has ? [latitude, longitude] : [-41, 174], zoom: has ? 16 : 4, attributionControl: true })
     L.tileLayer(OSM_TILES, { attribution: OSM_ATTRIBUTION, maxZoom: 19 }).addTo(m)
-    m.on('click', (e: L.LeafletMouseEvent) => onChangeRef.current(e.latlng.lat, e.latlng.lng))
+    if (!readOnly) m.on('click', (e: L.LeafletMouseEvent) => onChangeRef.current(e.latlng.lat, e.latlng.lng))
     map.current = m
     return () => { m.remove(); map.current = null; marker.current = null }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -48,7 +50,7 @@ export default function LocationPicker({ latitude, longitude, onChange, height =
     }
     const at: L.LatLngTuple = [latitude, longitude]
     if (!marker.current) {
-      const mk = L.marker(at, { icon: PIN, draggable: true }).addTo(m)
+      const mk = L.marker(at, { icon: PIN, draggable: !readOnly }).addTo(m)
       mk.on('dragend', () => { const p = mk.getLatLng(); onChangeRef.current(p.lat, p.lng) })
       marker.current = mk
     } else {

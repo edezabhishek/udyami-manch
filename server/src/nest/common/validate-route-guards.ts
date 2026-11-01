@@ -153,6 +153,18 @@ export const PUBLIC_ROUTE_ALLOW_LIST: string[] = [
   'PluginFrameController.serve',
   // Auth is per plugin route (route.auth in the manifest), asserted in the handler.
   'PluginsProxyController.proxy',
+  // The public pages: crawlers and visitors read them without an account.
+  'SeoController.atlas',
+  'SeoController.business',
+  'SeoController.city',
+  'SeoController.country',
+  'SeoController.dashboard',
+  'SeoController.events',
+  'SeoController.home',
+  'SeoController.privacy',
+  'SeoController.robots',
+  'SeoController.sitemap',
+  'SeoController.terms',
   // Share-token validated.
   'SharedController.placePhotoBytes',
   'SharedController.read',

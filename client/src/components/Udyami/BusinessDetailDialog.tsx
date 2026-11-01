@@ -1,3 +1,4 @@
+import { businessPath } from '@trek/shared'
 import { Bookmark, BookmarkCheck, Check, Globe, Mail, MapPin, Pencil, Phone, Store, Trash2, X } from 'lucide-react'
 import { useId } from 'react'
 import type { Business } from '@trek/shared'
@@ -82,6 +83,7 @@ export default function BusinessDetailDialog({ business, onClose, onToggleSave, 
             <div className="flex flex-wrap gap-2 ps-6">
               <a className={link} href={`https://www.google.com/maps/search/?api=1&query=${q}`} target="_blank" rel="noopener noreferrer"><MapPin size={12} /> Open in Google Maps</a>
               <a className={link} href={`https://www.google.com/maps/dir/?api=1&destination=${q}`} target="_blank" rel="noopener noreferrer">Get directions</a>
+              <a className={link} href={businessPath(business)}>Open full page</a>
             </div>
           )
         })()}

@@ -302,6 +302,8 @@ export function applyPlatformStatic(app: express.Application): void {
   if (readEnv().app.nodeEnv !== 'production') return;
   app.use(
     express.static(PUBLIC_DIR, {
+      // The home page is built by the SEO controller, so the bare index.html is not served at "/".
+      index: false,
       setHeaders: (res, filePath) => {
         if (filePath.endsWith('index.html')) {
           res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');

@@ -288,3 +288,4 @@ export * from './ferratas/ferratas.schema';
 // The 0.05 degree tile grid both ends load, cache and persist the layer on.
 export * from './ferratas/ferrataGrid';
 export * from './udyami/udyami.schema';
+export * from './udyami/slug';

@@ -219,7 +219,7 @@ apiClient.interceptors.response.use(
         // Udyami Manch: the directory, events and world map are open to visitors, so a
         // background read that needs a session must not throw them to the login page.
         // An action (add, save, register) is not a GET and still does.
-        const guestBrowse = ['/', '/dashboard', '/vacay', '/atlas'].includes(pathname) && (error.config?.method ?? 'get').toLowerCase() === 'get'
+        const guestBrowse = (['/', '/dashboard', '/vacay', '/atlas'].includes(pathname) || pathname.startsWith('/business/') || pathname.startsWith('/place/')) && (error.config?.method ?? 'get').toLowerCase() === 'get'
         if (!isAuthPublicPath(pathname) && !guestBrowse) {
           const currentPath = pathname + window.location.search + window.location.hash
           window.location.href = '/login?redirect=' + encodeURIComponent(currentPath)

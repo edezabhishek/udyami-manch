@@ -54,6 +54,8 @@ const SettingsPage = lazyWithRetry(() => import('./pages/SettingsPage'))
 const VacayPage = lazyWithRetry(() => import('./pages/VacayPage'))
 // Udyami Manch: the Events tab lists online events instead of TREK's holiday planner.
 const EventsPage = lazyWithRetry(() => import('./pages/EventsPage'))
+const BusinessPage = lazyWithRetry(() => import('./pages/BusinessPage'))
+const PlacePage = lazyWithRetry(() => import('./pages/PlacePage'))
 const LegalPage = lazyWithRetry(() => import('./pages/LegalPage'))
 const PublicHomePage = lazyWithRetry(() => import('./pages/PublicHomePage'))
 const HelpPage = lazyWithRetry(() => import('./pages/HelpPage'))
@@ -455,6 +457,9 @@ export default function App() {
       <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route path="/" element={<RootRedirect />} />
+          <Route path="/business/:slug" element={<OpenRoute><BusinessPage /></OpenRoute>} />
+          <Route path="/place/:country" element={<OpenRoute><PlacePage /></OpenRoute>} />
+          <Route path="/place/:country/:city" element={<OpenRoute><PlacePage /></OpenRoute>} />
           <Route path="/terms" element={<PublicRoute><LegalPage doc="terms" /></PublicRoute>} />
           <Route path="/privacy" element={<PublicRoute><LegalPage doc="privacy" /></PublicRoute>} />
           <Route path="/login" element={<PublicRoute redirectAuthed><LoginPage /></PublicRoute>} />
