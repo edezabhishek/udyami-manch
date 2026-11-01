@@ -7,7 +7,7 @@ import { PLATFORM_LABEL } from './EventFormDialog'
 import { formatWhen } from './eventTime'
 
 /**
- * The bottom card of Home, the way the original listed upcoming reservations: the
+ * The last card of Home's tools column, the way the original listed upcoming reservations: the
  * next online events, a date block, the title and time, and the platform at the end.
  * Times show in the reader's own timezone.
  */
@@ -23,7 +23,7 @@ export default function UpcomingEvents() {
 
   if (events === null) return null
   return (
-    <div className="tool" style={{ marginTop: 40 }}>
+    <div className="tool">
       <div className="tool-head">
         <div className="tool-title"><Calendar size={14} /> Upcoming online events</div>
       </div>

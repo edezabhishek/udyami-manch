@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSettingsStore } from '../../store/settingsStore';
 import { browserTimeZone, isValidTimeZone } from '../../utils/localDate';
 
-const DEFAULT_ZONES = ['Pacific/Auckland', 'Asia/Kolkata'];
+const DEFAULT_ZONES = ['Asia/Kathmandu', 'Pacific/Auckland', 'Asia/Kolkata'];
 
 // Fallback for the rare browser without Intl.supportedValuesOf.
 const FALLBACK_ZONES = [
@@ -47,7 +47,9 @@ export function useDashboardTimezones(locale: string) {
   // Unset (never chosen) falls back to home + defaults; an explicit list is honoured.
   // A browser that names no zone (#2694) or a zone this browser does not know
   // would throw while rendering a clock, so such entries are left out.
-  const zones = (stored ?? [home, ...DEFAULT_ZONES]).filter(isValidTimeZone);
+  // Some systems still name Nepal's zone Asia/Katmandu, which would show Kathmandu twice.
+  const canonical = (z: string) => (z === 'Asia/Katmandu' ? 'Asia/Kathmandu' : z);
+  const zones = [...new Set((stored ?? [home, ...DEFAULT_ZONES]).map(canonical))].filter(isValidTimeZone);
   const setZones = (next: string[]) => {
     updateSetting('dashboard_timezones', next).catch(() => {});
   };

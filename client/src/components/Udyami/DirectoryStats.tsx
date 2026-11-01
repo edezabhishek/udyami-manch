@@ -4,12 +4,10 @@ import { businessesApi } from '../../api/udyami'
 import { Skeleton } from '../shared/Skeleton'
 import CountryFlag from '../shared/CountryFlag'
 import { countryCodeOf } from './CountrySelect'
-import { useAuthStore } from '../../store/authStore'
 
-/** The numbers row under the spotlight: the directory's reach, then the reader's own. */
+/** The numbers row under the spotlight, four cards like the original: countries first, then the directory's size. */
 export default function DirectoryStats({ refreshKey }: { refreshKey: number }) {
   const [stats, setStats] = useState<Stats | null>(null)
-  const signedIn = useAuthStore(s => !!s.user)
 
   useEffect(() => {
     let alive = true
@@ -20,7 +18,7 @@ export default function DirectoryStats({ refreshKey }: { refreshKey: number }) {
   const value = (n: number | undefined) => (stats === null ? <Skeleton width={44} height={30} radius={6} /> : n ?? 0)
 
   return (
-    <section className="atlas" style={{ '--atlas-template': signedIn ? '1.5fr 1fr 1fr 1fr' : '1.5fr 1fr 1fr', '--atlas-template-m': '1fr 1fr' } as CSSProperties}>
+    <section className="atlas" style={{ '--atlas-template': '1.5fr 1fr 1fr 1fr', '--atlas-template-m': '1fr 1fr' } as CSSProperties}>
       <div className="atlas-card passport">
         <div className="label">Atlas · countries listed</div>
         <div className="value mono">{value(stats?.countries)}<span style={{ fontSize: 15, fontWeight: 500, opacity: 0.6, marginInlineStart: 8, whiteSpace: 'pre' }}>{' of 195'}</span></div>
@@ -40,13 +38,11 @@ export default function DirectoryStats({ refreshKey }: { refreshKey: number }) {
         <div className="value mono">{value(stats?.cities)}</div>
         <div className="delta">with listings</div>
       </div>
-      {signedIn && <div className="atlas-card">
-        <div className="label">Yours</div>
-        <div className="value mono">{value(stats?.mine)}</div>
-        <div className="delta">
-          {stats ? `${stats.saved} saved${stats.pending ? ` · ${stats.pending} to review` : ''}` : ' '}
-        </div>
-      </div>}
+      <div className="atlas-card">
+        <div className="label">Categories</div>
+        <div className="value mono">{value(stats?.categories)}</div>
+        <div className="delta">kinds of business</div>
+      </div>
     </section>
   )
 }

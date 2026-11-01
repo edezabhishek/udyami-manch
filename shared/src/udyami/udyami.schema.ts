@@ -159,6 +159,8 @@ export const directoryStatsSchema = z.object({
   /** The listed countries by name, for the flags on the Home card. */
   country_names: z.array(z.string()),
   cities: z.number().int(),
+  /** How many different kinds of business are listed. */
+  categories: z.number().int(),
   mine: z.number().int(),
   saved: z.number().int(),
   pending: z.number().int(),

@@ -165,7 +165,7 @@ export default function BusinessesSection({ addOpen, onAddClose, onChanged, onAd
           ))}
         </div>
       )}
-      <div className={view === 'list' ? 'hidden' : 'grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3'}>
+      <div className={view === 'list' ? 'hidden' : 'grid grid-cols-1 gap-5 sm:grid-cols-2'}>
         {businesses?.map(b => (
           <BusinessCard key={b.id} business={b} onOpen={() => setOpen(b)} onToggleSave={() => toggleSave(b)} />
         ))}

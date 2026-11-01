@@ -159,6 +159,7 @@ export class UdyamiBusinessesService {
       countries: new Set(places.map((p) => p.country.trim().toLowerCase())).size,
       country_names: [...new Map(places.map((p) => [p.country.trim().toLowerCase(), p.country.trim()] as const)).values()],
       cities: new Set(places.map((p) => `${p.city.trim().toLowerCase()}|${p.country.trim().toLowerCase()}`)).size,
+      categories: new Set(places.map((p) => p.category.trim().toLowerCase()).filter(Boolean)).size,
       mine: await this.businesses.countWhere({ ownerUserId: user.id }),
       saved: savedIds.length,
       pending: user.role === 'admin' ? await this.businesses.countWhere({ status: 'pending' }) : 0,

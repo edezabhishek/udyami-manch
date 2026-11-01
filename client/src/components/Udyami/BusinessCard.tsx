@@ -41,7 +41,7 @@ export default function BusinessCard({ business, onOpen, onToggleSave }: {
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen() } }}
       className="group flex min-w-0 cursor-pointer flex-col overflow-hidden rounded-[20px] border border-edge bg-surface-card shadow-card transition-shadow hover:shadow-elevated"
     >
-      <div className="relative h-[210px] flex-none">
+      <div className="relative h-[260px] flex-none">
         {business.photo_url
           ? <img src={business.photo_url} alt={business.name} className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
           : <div className="absolute inset-0" style={{ background: businessGradient(business.id) }} />}

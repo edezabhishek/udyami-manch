@@ -117,8 +117,8 @@ export class UdyamiBusinessesRepository extends TrekRepository<UdyamiBusinesses>
   }
 
   /** City and country of every approved listing, for the directory counts. */
-  async approvedPlaces(): Promise<{ city: string; country: string }[]> {
-    const rows = await this.find({ status: 'approved' }, { fields: ['city', 'country'] });
-    return rows.map((r) => ({ city: r.city, country: r.country }));
+  async approvedPlaces(): Promise<{ city: string; country: string; category: string }[]> {
+    const rows = await this.find({ status: 'approved' }, { fields: ['city', 'country', 'category'] });
+    return rows.map((r) => ({ city: r.city, country: r.country, category: r.category }));
   }
 }
