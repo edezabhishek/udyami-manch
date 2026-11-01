@@ -3,12 +3,15 @@ import { UdyamiBusinesses } from '../../db/entities/UdyamiBusinesses.entity';
 import { UdyamiSavedBusinesses } from '../../db/entities/UdyamiSavedBusinesses.entity';
 import { UdyamiEventRsvps } from '../../db/entities/UdyamiEventRsvps.entity';
 import { UdyamiEvents } from '../../db/entities/UdyamiEvents.entity';
+import { UdyamiImpactStories } from '../../db/entities/UdyamiImpactStories.entity';
 import { Users } from '../../db/entities/Users.entity';
 import { UdyamiNominations } from '../../db/entities/UdyamiNominations.entity';
 import { UdyamiSpotlights } from '../../db/entities/UdyamiSpotlights.entity';
 import { UdyamiBusinessesController } from './udyami-businesses.controller';
 import { UdyamiBusinessesService } from './udyami-businesses.service';
 import { UdyamiEventsController } from './udyami-events.controller';
+import { UdyamiImpactController } from './udyami-impact.controller';
+import { UdyamiImpactService } from './udyami-impact.service';
 import { UdyamiGeocodeController } from './udyami-geocode.controller';
 import { UdyamiGeocodeService } from './udyami-geocode.service';
 import { UdyamiMapController } from './udyami-map.controller';
@@ -21,8 +24,8 @@ import { Module } from '@nestjs/common';
 
 /** Udyami Manch: "Udyami of the Month" and nominations. Registered in AppModule. */
 @Module({
-  imports: [MikroOrmModule.forFeature([AppSettings, UdyamiSpotlights, UdyamiNominations, UdyamiBusinesses, UdyamiSavedBusinesses, UdyamiEvents, UdyamiEventRsvps, Users])],
-  controllers: [UdyamiController, UdyamiBusinessesController, UdyamiEventsController, UdyamiMapController, UdyamiGeocodeController],
-  providers: [UdyamiService, UdyamiBusinessesService, UdyamiEventsService, UdyamiGeocodeService, UdyamiStarterListingsService],
+  imports: [MikroOrmModule.forFeature([AppSettings, UdyamiSpotlights, UdyamiNominations, UdyamiBusinesses, UdyamiSavedBusinesses, UdyamiEvents, UdyamiEventRsvps, UdyamiImpactStories, Users])],
+  controllers: [UdyamiController, UdyamiBusinessesController, UdyamiEventsController, UdyamiImpactController, UdyamiMapController, UdyamiGeocodeController],
+  providers: [UdyamiService, UdyamiBusinessesService, UdyamiEventsService, UdyamiImpactService, UdyamiGeocodeService, UdyamiStarterListingsService],
 })
 export class UdyamiModule {}

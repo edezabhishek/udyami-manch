@@ -1,6 +1,8 @@
 import {
   businessStatusRequestSchema,
   eventStatusRequestSchema,
+  impactStatusRequestSchema,
+  impactUpsertRequestSchema,
   eventUpsertRequestSchema,
   businessUpsertRequestSchema,
   nominationCreateRequestSchema,
@@ -16,3 +18,5 @@ export class BusinessUpsertDto extends createZodDto(businessUpsertRequestSchema)
 export class BusinessStatusDto extends createZodDto(businessStatusRequestSchema) {}
 export class EventUpsertDto extends createZodDto(eventUpsertRequestSchema) {}
 export class EventStatusDto extends createZodDto(eventStatusRequestSchema) {}
+export class ImpactUpsertDto extends createZodDto(impactUpsertRequestSchema) {}
+export class ImpactStatusDto extends createZodDto(impactStatusRequestSchema) {}

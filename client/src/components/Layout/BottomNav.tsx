@@ -3,17 +3,18 @@ import { useAddonStore } from '../../store/addonStore'
 import { usePluginStore } from '../../store/pluginStore'
 import { useSettingsStore } from '../../store/settingsStore'
 import { useTranslation } from '../../i18n'
-import { LayoutGrid, CalendarDays, Globe, Compass, Bookmark, Plus } from 'lucide-react'
+import { LayoutGrid, CalendarDays, Globe, HeartHandshake, Bookmark, Plus } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { resolvePluginIcon } from '../shared/PluginIcon'
 import { useAuthStore } from '../../store/authStore'
 import { visibleManagedNavItems } from '../../managed'
 import { isNavItemActive, useCreateAction } from './useCreateAction'
+import { addonPath } from './navItems'
 
 const ADDON_NAV: Record<string, { icon: LucideIcon; labelKey: string }> = {
   vacay:       { icon: CalendarDays, labelKey: 'admin.addons.catalog.vacay.name' },
   atlas:       { icon: Globe,        labelKey: 'admin.addons.catalog.atlas.name' },
-  journey:     { icon: Compass,      labelKey: 'admin.addons.catalog.journey.name' },
+  journey:     { icon: HeartHandshake,      labelKey: 'admin.addons.catalog.journey.name' },
   collections: { icon: Bookmark,     labelKey: 'admin.addons.catalog.collections.name' },
 }
 
@@ -37,7 +38,7 @@ export default function BottomNav() {
     { to: '/dashboard', label: t('nav.myTrips'), icon: LayoutGrid },
     ...globalAddons.flatMap(addon => {
       const nav = ADDON_NAV[addon.id]
-      return nav ? [{ to: `/${addon.id}`, label: t(nav.labelKey), icon: nav.icon }] : []
+      return nav ? [{ to: addonPath(addon.id), label: t(nav.labelKey), icon: nav.icon }] : []
     }),
     ...pagePlugins.map(p => ({ to: `/plugins/${p.id}`, label: p.name, icon: resolvePluginIcon(p.icon) })),
     // Empty in this repository — see client/src/managed.

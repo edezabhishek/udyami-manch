@@ -54,6 +54,7 @@ const SettingsPage = lazyWithRetry(() => import('./pages/SettingsPage'))
 const VacayPage = lazyWithRetry(() => import('./pages/VacayPage'))
 // Udyami Manch: the Events tab lists online events instead of TREK's holiday planner.
 const EventsPage = lazyWithRetry(() => import('./pages/EventsPage'))
+const ImpactPage = lazyWithRetry(() => import('./pages/ImpactPage'))
 const MyDashboardPage = lazyWithRetry(() => import('./pages/MyDashboardPage'))
 const BusinessPage = lazyWithRetry(() => import('./pages/BusinessPage'))
 const PlacePage = lazyWithRetry(() => import('./pages/PlacePage'))
@@ -555,14 +556,9 @@ export default function App() {
               </OpenRoute>
             }
           />
-          <Route
-            path="/journey"
-            element={
-              <ProtectedRoute addonId="journey">
-                <ViewportRoute phone={MJourneyScreen} desktop={JourneyPage} />
-              </ProtectedRoute>
-            }
-          />
+          {/* Udyami Manch: Journey became Impact stories, open to everyone. */}
+          <Route path="/impact" element={<OpenRoute><ImpactPage /></OpenRoute>} />
+          <Route path="/journey" element={<Navigate to="/impact" replace />} />
           <Route
             path="/journey/:id"
             element={

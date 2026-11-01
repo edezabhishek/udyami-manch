@@ -119,6 +119,7 @@ import { TagsSchema } from './Tags.entity';
 import { UdyamiBusinessesSchema } from './UdyamiBusinesses.entity';
 import { UdyamiEventRsvpsSchema } from './UdyamiEventRsvps.entity';
 import { UdyamiEventsSchema } from './UdyamiEvents.entity';
+import { UdyamiImpactStoriesSchema } from './UdyamiImpactStories.entity';
 import { UdyamiNominationsSchema } from './UdyamiNominations.entity';
 import { UdyamiSavedBusinessesSchema } from './UdyamiSavedBusinesses.entity';
 import { UdyamiSpotlightsSchema } from './UdyamiSpotlights.entity';
@@ -289,6 +290,7 @@ export const ALL_ENTITIES: readonly EntitySchema[] = [
   UdyamiBusinessesSchema,
   UdyamiEventRsvpsSchema,
   UdyamiEventsSchema,
+  UdyamiImpactStoriesSchema,
   UdyamiNominationsSchema,
   UdyamiSavedBusinessesSchema,
   UdyamiSpotlightsSchema,

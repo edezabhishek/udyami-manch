@@ -233,3 +233,58 @@ export const geocodeResultSchema = z.object({
 export type GeocodeResult = z.infer<typeof geocodeResultSchema>;
 export const geocodeResponseSchema = z.object({ results: z.array(geocodeResultSchema) });
 export type GeocodeResponse = z.infer<typeof geocodeResponseSchema>;
+
+// ── Impact stories ───────────────────────────────────────────────────────────
+
+/** What a business did for Nepal or Nepalese people. */
+export const IMPACT_CATEGORIES = ['Donation', 'Jobs', 'Education', 'Health', 'Disaster relief', 'Training', 'Investment', 'Other'] as const;
+
+export const impactStatusSchema = eventStatusSchema;
+export type ImpactStatus = z.infer<typeof impactStatusSchema>;
+
+export const impactStorySchema = z.object({
+  id: z.number().int(),
+  author_user_id: z.number().int().nullable(),
+  title: z.string(),
+  business_name: z.string(),
+  /** Where the business is based. */
+  business_country: z.string(),
+  /** Where the help went, usually Nepal. */
+  impact_place: z.string(),
+  category: z.string(),
+  summary: z.string(),
+  details: z.string().nullable(),
+  /** YYYY-MM-DD, when it happened. */
+  happened_on: z.string(),
+  people_helped: z.number().int().nullable(),
+  cover_url: z.string().nullable(),
+  /** A page or post that backs the story up. */
+  proof_url: z.string().nullable(),
+  status: impactStatusSchema,
+  is_mine: z.boolean(),
+  created_at: z.string().nullable(),
+});
+export type ImpactStory = z.infer<typeof impactStorySchema>;
+
+export const impactUpsertRequestSchema = z.object({
+  title: z.string().trim().min(1).max(140),
+  business_name: z.string().trim().min(1).max(140),
+  business_country: z.string().trim().min(1).max(80),
+  impact_place: z.string().trim().min(1).max(140),
+  category: z.string().trim().min(1).max(60),
+  summary: z.string().trim().min(10).max(300),
+  details: optionalText(4000),
+  happened_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
+  people_helped: z.number().int().min(0).max(100_000_000).nullable().optional(),
+  cover_url: httpUrl.nullable().optional().or(z.literal('')),
+  proof_url: httpUrl,
+});
+export type ImpactUpsertRequest = z.infer<typeof impactUpsertRequestSchema>;
+
+export const impactListScopeSchema = z.enum(['all', 'mine', 'pending']);
+export type ImpactListScope = z.infer<typeof impactListScopeSchema>;
+
+export const impactResponseSchema = z.object({ story: impactStorySchema });
+export const impactListResponseSchema = z.object({ stories: z.array(impactStorySchema) });
+export type ImpactListResponse = z.infer<typeof impactListResponseSchema>;
+export const impactStatusRequestSchema = z.object({ status: impactStatusSchema });

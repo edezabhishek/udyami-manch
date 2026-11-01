@@ -1,8 +1,8 @@
 import { Check, Inbox, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
-import { businessPath, type Business, type UdyamiEvent } from '@trek/shared'
-import { businessesApi, COMMUNITY_LABEL, eventsApi } from '../../api/udyami'
+import { businessPath, type Business, type ImpactStory, type UdyamiEvent } from '@trek/shared'
+import { businessesApi, COMMUNITY_LABEL, eventsApi, impactApi } from '../../api/udyami'
 import { formatWhen } from './eventTime'
 import { useToast } from '../shared/Toast'
 
@@ -17,13 +17,15 @@ export default function ModerationQueue() {
   toastRef.current = toast
   const [businesses, setBusinesses] = useState<Business[] | null>(null)
   const [events, setEvents] = useState<UdyamiEvent[] | null>(null)
+  const [stories, setStories] = useState<ImpactStory[] | null>(null)
 
   const load = useCallback(async () => {
     try {
-      const [b, e] = await Promise.all([businessesApi.list({ scope: 'pending' }), eventsApi.list('pending')])
+      const [b, e, i] = await Promise.all([businessesApi.list({ scope: 'pending' }), eventsApi.list('pending'), impactApi.list('pending')])
       setBusinesses(b.businesses)
       setEvents(e.events)
-    } catch { setBusinesses([]); setEvents([]); toastRef.current.error('Could not load the review queue') }
+      setStories(i.stories)
+    } catch { setBusinesses([]); setEvents([]); setStories([]); toastRef.current.error('Could not load the review queue') }
   }, [])
   useEffect(() => { void load() }, [load])
 
@@ -34,7 +36,11 @@ export default function ModerationQueue() {
     try { await eventsApi.setStatus(ev.id, status); setEvents(l => l?.filter(x => x.id !== ev.id) ?? null); toast.success(status === 'approved' ? 'Event listed' : 'Rejected') } catch { toast.error('Could not update the event') }
   }
 
-  const waiting = (businesses?.length ?? 0) + (events?.length ?? 0)
+  const decideStory = async (s: ImpactStory, status: 'approved' | 'rejected') => {
+    try { await impactApi.setStatus(s.id, status); setStories(l => l?.filter(x => x.id !== s.id) ?? null); toast.success(status === 'approved' ? 'Story shown' : 'Rejected') } catch { toast.error('Could not update the story') }
+  }
+
+  const waiting = (businesses?.length ?? 0) + (events?.length ?? 0) + (stories?.length ?? 0)
   return (
     <div className={CARD}>
       <div className="mb-1 flex items-center gap-2">
@@ -42,7 +48,7 @@ export default function ModerationQueue() {
         <h3 className="m-0 text-subtitle font-semibold text-content">Waiting for review</h3>
         {businesses !== null && <span className="rounded-full bg-accent-subtle px-2 py-[1px] text-caption font-semibold text-accent-on">{waiting}</span>}
       </div>
-      <p className="m-0 mb-4 text-caption text-content-muted">New and edited businesses and events stay hidden until you approve them.</p>
+      <p className="m-0 mb-4 text-caption text-content-muted">New and edited businesses, events and impact stories stay hidden until you approve them.</p>
       {businesses !== null && waiting === 0 && <p className="m-0 text-body text-content-muted">Nothing is waiting. You are all caught up.</p>}
 
       {(businesses?.length ?? 0) > 0 && (
@@ -75,6 +81,25 @@ export default function ModerationQueue() {
                 </div>
                 <button type="button" className={BTN} onClick={() => decideEvent(ev, 'approved')}><Check size={14} /> Approve</button>
                 <button type="button" className={BTN} onClick={() => decideEvent(ev, 'rejected')}><X size={14} /> Reject</button>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+
+      {(stories?.length ?? 0) > 0 && (
+        <>
+          <div className="mb-2 mt-4 text-caption font-semibold uppercase tracking-[.08em] text-content-muted">Impact stories</div>
+          <ul className="m-0 flex list-none flex-col gap-2 p-0">
+            {stories!.map(s => (
+              <li key={s.id} className="flex flex-wrap items-center gap-3 rounded-[12px] border border-edge-faint px-3 py-2">
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-body font-semibold text-content">{s.title}</div>
+                  <div className="truncate text-caption text-content-muted">{s.business_name} · {s.business_country} · {s.category}</div>
+                  <a className="text-caption text-accent-on no-underline hover:underline" href={s.proof_url} target="_blank" rel="noopener noreferrer nofollow">Check the source</a>
+                </div>
+                <button type="button" className={BTN} onClick={() => decideStory(s, 'approved')}><Check size={14} /> Approve</button>
+                <button type="button" className={BTN} onClick={() => decideStory(s, 'rejected')}><X size={14} /> Reject</button>
               </li>
             ))}
           </ul>

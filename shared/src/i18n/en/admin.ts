@@ -829,7 +829,7 @@ const admin: TranslationStrings = {
   'admin.update.wikiLink': 'Open the update guide',
   'admin.update.reloadHint': 'Please reload the page in a few seconds.',
   'admin.tabs.permissions': 'Permissions',
-  'admin.addons.catalog.journey.name': 'Stories',
+  'admin.addons.catalog.journey.name': 'Impact',
   'admin.addons.catalog.journey.description':
     'Trip tracking & travel journal with check-ins, photos, and daily stories',
   'admin.addons.catalog.collections.name': 'Guides',

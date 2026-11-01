@@ -1,4 +1,4 @@
-import { CalendarDays, Globe, Store } from 'lucide-react'
+import { CalendarDays, Globe, HeartHandshake, Store } from 'lucide-react'
 import { useEffect } from 'react'
 import { Link, NavLink, useLocation } from 'react-router'
 
@@ -6,10 +6,11 @@ const LINKS = [
   { to: '/dashboard', label: 'Home', icon: Store },
   { to: '/atlas', label: 'Atlas', icon: Globe },
   { to: '/vacay', label: 'Events', icon: CalendarDays },
+  { to: '/impact', label: 'Impact', icon: HeartHandshake },
 ]
 
 /**
- * The top bar a visitor sees before signing in: the logo, the three public pages
+ * The top bar a visitor sees before signing in: the logo, the four public pages
  * and the way in. Sign in sends them back to the page they were on.
  */
 export default function GuestNavbar() {

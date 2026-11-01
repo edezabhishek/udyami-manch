@@ -1,5 +1,10 @@
 import { apiClient } from './client'
 import type {
+  ImpactListResponse,
+  ImpactListScope,
+  ImpactStatus,
+  ImpactStory,
+  ImpactUpsertRequest,
   EventListResponse,
   EventListScope,
   EventStatus,
@@ -95,4 +100,14 @@ export const eventsApi = {
   unrsvp: (id: number): Promise<{ event: UdyamiEvent }> => apiClient.delete(`/udyami/events/${id}/rsvp`).then(r => r.data),
   setStatus: (id: number, status: EventStatus): Promise<{ event: UdyamiEvent }> =>
     apiClient.patch(`/udyami/events/${id}/status`, { status }).then(r => r.data),
+}
+
+/** /api/udyami/impact: what businesses did for Nepal and Nepalese people. */
+export const impactApi = {
+  list: (scope: ImpactListScope = 'all'): Promise<ImpactListResponse> => apiClient.get('/udyami/impact', { params: { scope } }).then(r => r.data),
+  create: (data: ImpactUpsertRequest): Promise<{ story: ImpactStory }> => apiClient.post('/udyami/impact', data).then(r => r.data),
+  update: (id: number, data: ImpactUpsertRequest): Promise<{ story: ImpactStory }> => apiClient.put(`/udyami/impact/${id}`, data).then(r => r.data),
+  remove: (id: number): Promise<{ success: boolean }> => apiClient.delete(`/udyami/impact/${id}`).then(r => r.data),
+  setStatus: (id: number, status: ImpactStatus): Promise<{ story: ImpactStory }> =>
+    apiClient.patch(`/udyami/impact/${id}/status`, { status }).then(r => r.data),
 }

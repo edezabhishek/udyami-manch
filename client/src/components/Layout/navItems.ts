@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { LayoutGrid, CalendarDays, Globe, Compass, Bookmark, type LucideIcon } from 'lucide-react'
+import { LayoutGrid, CalendarDays, Globe, HeartHandshake, Bookmark, type LucideIcon } from 'lucide-react'
 import { useTranslation } from '../../i18n'
 import { useAddonStore } from '../../store/addonStore'
 import { usePluginStore } from '../../store/pluginStore'
@@ -14,6 +14,9 @@ import { resolvePluginIcon } from '../shared/PluginIcon'
  * addon's id (vacay|atlas|journey|collections|future), or `'plugin:<id>'` for a
  * page plugin. Dashboard is always first and immovable.
  */
+/** Udyami Manch: the Journey addon is the Impact stories page, at /impact. */
+export const addonPath = (id: string): string => (id === 'journey' ? '/impact' : `/${id}`)
+
 export interface NavItemDef {
   id: string
   to: string
@@ -28,7 +31,7 @@ export interface NavItemDef {
 const ADDON_ICONS: Record<string, LucideIcon> = {
   vacay: CalendarDays,
   atlas: Globe,
-  journey: Compass,
+  journey: HeartHandshake,
   collections: Bookmark,
 }
 
@@ -60,7 +63,7 @@ export function buildNavItems(
       const translated = t(key)
       return {
         id: a.id,
-        to: `/${a.id}`,
+        to: addonPath(a.id),
         label: translated && translated !== key ? translated : a.name || a.id,
         icon: ADDON_ICONS[a.id] ?? resolvePluginIcon(a.icon),
       }

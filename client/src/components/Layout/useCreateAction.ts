@@ -28,6 +28,7 @@ export function useCreateAction(phone: boolean): CreateAction {
   const onJourneyList = useMatch('/journey');
   const onAtlas = useMatch('/atlas');
   const onEvents = useMatch('/vacay');
+  const onImpact = useMatch('/impact');
   const onCollections = useMatch('/collections');
   const inCollection = useMatch('/collections/:id');
 
@@ -56,6 +57,10 @@ export function useCreateAction(phone: boolean): CreateAction {
   }
   if (onJourneyList) {
     return { label: t('journey.new'), run: () => navigate('/journey?create=1') };
+  }
+  // Udyami Manch: on Impact the "+" shares a story.
+  if (onImpact) {
+    return { label: 'Share a story', run: () => navigate('/impact?create=1') };
   }
   // Udyami Manch: on Events the "+" creates or suggests an online event.
   if (onEvents) {
