@@ -4,6 +4,7 @@ import type { Nomination, NominationStatus, Spotlight, SpotlightUpsertRequest } 
 import { currentMonth, monthLabel, udyamiApi } from '../../api/udyami'
 import { useToast } from '../shared/Toast'
 import CountrySelect from './CountrySelect'
+import ModerationQueue from './ModerationQueue'
 
 const FIELD = 'w-full rounded-[10px] border border-edge bg-surface-input px-3 py-2 text-body text-content outline-none focus:border-accent'
 const LABEL = 'mb-1 block text-caption font-semibold text-content-secondary'
@@ -121,6 +122,7 @@ export default function AdminUdyamiPanel() {
 
   return (
     <div className="flex flex-col gap-5">
+      <ModerationQueue />
       <form className={CARD} onSubmit={save}>
         <div className="mb-4 flex items-center gap-2">
           <Award size={18} className="text-accent" />

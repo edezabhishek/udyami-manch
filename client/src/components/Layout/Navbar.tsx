@@ -318,6 +318,14 @@ function MemberNavbar({ tripTitle, tripId, onBack, showBack, onSettings }: Navba
                 </div>
 
                 <div className="py-1">
+                  <Link to="/my" onClick={() => setUserMenuOpen(false)}
+                    className="flex items-center gap-2 px-4 py-2 text-sm transition-colors text-content-secondary"
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                    <Briefcase className="w-4 h-4" />
+                    My dashboard
+                  </Link>
+
                   <Link to="/settings" onClick={() => setUserMenuOpen(false)}
                     className="flex items-center gap-2 px-4 py-2 text-sm transition-colors text-content-secondary"
                     onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}

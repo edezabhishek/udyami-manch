@@ -57,7 +57,7 @@ function AdminPageDesktop(): React.ReactElement {
   const GROUP_LABELS = { users: gUsers, config: gConfig, integration: gIntegration, maintenance: gMaintenance }
   const TABS: PageSidebarTab[] = [
     { id: 'users', label: t('admin.tabs.users'), icon: Users, group: gUsers },
-    { id: 'udyami', label: 'Udyami of the Month', icon: Award, group: gUsers },
+    { id: 'udyami', label: 'Moderation and Udyami', icon: Award, group: gUsers },
     { id: 'defaults', label: t('admin.tabs.defaults'), icon: UserCog, group: gUsers },
     { id: 'config', label: t('admin.tabs.config'), icon: SlidersHorizontal, group: gConfig },
     { id: 'settings', label: t('admin.tabs.settings'), icon: SettingsIcon, group: gConfig },

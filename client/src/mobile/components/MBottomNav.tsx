@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router'
 import { useSettingsStore } from '../../store/settingsStore'
 import { useTranslation } from '../../i18n'
-import { ChevronRight, MoreHorizontal, Plus, Search, Sparkles, Upload } from 'lucide-react'
+import { ChevronRight, MoreHorizontal, Plus, Search, Sparkles, Upload, UserRound } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { normalizeAppearance } from '@trek/shared'
 import { useNavItems, splitMobileNav } from '../../components/Layout/navItems'
@@ -46,6 +46,7 @@ export default function MBottomNav() {
   const isActive = (to: string) => isNavItemActive(location.pathname, to)
   const moreActive = moreItems.some(item => isActive(item.to))
   const moreRows = [
+    { key: 'my-dashboard', label: 'My dashboard', icon: UserRound, go: () => navigate('/my') },
     ...(assistant.available ? [{ key: 'assistant', label: t('assistant.launcher.tooltip'), icon: Sparkles, go: assistant.open }] : []),
     ...moreItems.map(({ to, label, icon }) => ({ key: to, label, icon, go: () => navigate(to) })),
   ]
